@@ -90,6 +90,8 @@ class Main_Script:
             Chi_Squared = -np.inf
         elif np.linalg.norm(v) == 0.0:
             Chi_Squared = -7e6
+        elif np.linalg.norm([x,y,z]) == 0.0:
+            Chi_Squared = -7e6
         elif m1 > 5 or m2 > 5 or m1 <= 0.1 or m2 <= 0.1:      # Note, this is an upper limit on mass of 5x10^12 Solar Masses.
             Chi_Squared = -np.inf
         elif r1 > ((dims[0]*Resolution/15)) or r2 > ((dims[0]*Resolution/15)):  # Note, this is a cutoff of a Galactic radius of 600kpc
