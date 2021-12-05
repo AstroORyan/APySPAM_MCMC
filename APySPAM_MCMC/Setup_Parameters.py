@@ -26,8 +26,8 @@ class Setup_Parameters:
       mass2 = 2.5#0.07388#3.2343629373210243#15#10#
       rout1 = (Input_Image.shape[0]*Resolution/15)/2 #10#
       rout2 = (Input_Image.shape[0]*Resolution/15)/2 #0.5569210#10
-      phi1 = 180#90 #
-      phi2 = 180#90 #
+      phi1 = 45 #90 #
+      phi2 = 45 #90 #
       theta1 = 180# 90 #
       theta2 = 180#90 #
       

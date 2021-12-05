@@ -188,7 +188,7 @@ class Run:
           #IOUtil.outputParticles(run.getFilename(run.params.iout), run.integrator.x)
           
       # print('Sim complete. Computing fluxes. Standby...')
-      
+            
       SFRs, SF_Mass = SFR_Calculations.SFR(Gas_Masses,params.mass1,params.mass2,params.rout1,params.rout2,params.Seperation,params.h,time_interval/2,
                                   Weights,params.n1,params.n,params.Ages)
       

@@ -10,11 +10,11 @@ Algorithm to find the colour fluxes from each pixel in our image.
 import glob
 import numpy as np
 from scipy import interpolate
-import matplotlib.pyplot as plt
+import sys
 
 class colour:
     def get_filters(folder):
-        filter_folder = folder+'\\Filters\\'
+        filter_folder = folder+'/Filters/'
         filters = glob.glob(filter_folder+'*.*')
         
         filter_data = []
@@ -68,10 +68,13 @@ class colour:
       
       return flux
     
-    def get_colour(SED,Wavelength,filters,z):
-        
+    def get_colour(SED,Wavelength,filters,z):        
         c = 2.988e8
         conv_units = 3.826e33   # To convert units from default GALEX units to ergs/s. Found from GALEX documentation. 
+
+        if len(filters) == 0:
+           print('WARNING: Filter folder not detected. Check paths and retry.')
+           sys.exit()
         
         d_cm = colour.get_dist(z)
         

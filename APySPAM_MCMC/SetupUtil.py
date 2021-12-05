@@ -507,6 +507,21 @@ class SetupUtil:
     cosv = MathUtil.dot(ev,r)/(ecc*rmag)
     cosu = MathUtil.dot(n,r)/(nmag*rmag)
 
+    if cosw > 1.0:
+        cosw = 1.0
+    elif cosw < -1.0:
+        cosw = -1.0
+
+    if cosv > 1.0:
+        cosv = 1.0
+    elif cosv < -1.0:
+        cosv = -1.0
+
+    if cosu > 1.0:
+       cosu = 1.0
+    elif cosu < -1.0:
+       cosu = -1.0
+
     outv = [0]*7
     outv[0] = p
     outv[1] = ecc

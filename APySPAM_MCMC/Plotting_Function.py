@@ -9,12 +9,11 @@ Quickly creates an image of the system using imshow and a meshgrid.
 """
 import numpy as np
 
-
 class Plotting_Function:
     def plotting(Coordinates,part_flux,SFRs,n_filters,Resolution,dims,Conversion):
         # Define Constants
         DU = 15
-                
+        
         # First, extract the wanted dimensions. 
         x = Coordinates[:,0] - (Conversion[0]*Resolution/DU)
         y = Coordinates[:,1] - (Conversion[1]*Resolution/DU)
@@ -45,13 +44,13 @@ class Plotting_Function:
                 q = np.where(y[i] >= y_pixel_value)[0][-1]
 
                 Image[p,q] += total_flux[i]
-                
-        return Image
-            
-        # plt.figure()
-        # plt.imshow(Image.T, origin='lower')
-        # plt.title('White Image')
+                            
+        #plt.figure()
+        #plt.imshow(Image.T, origin='lower')
+        #plt.title('White Image')
         
-        # plt.figure()
-        # plt.imshow(-2.5*np.log10(Image.T) - 48.6, origin='lower')
-        # plt.title('AB Magnitude Map')
+        #plt.figure()
+        #plt.imshow(-2.5*np.log10(Image.T) - 48.6, origin='lower')
+        #plt.title('AB Magnitude Map')
+
+        return Image
