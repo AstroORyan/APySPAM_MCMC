@@ -8,6 +8,7 @@ Quickly creates an image of the system using imshow and a meshgrid.
 
 """
 import numpy as np
+import sys
 
 class Plotting_Function:
     def plotting(Coordinates,part_flux,SFRs,n_filters,Resolution,dims,Conversion):
@@ -47,7 +48,7 @@ class Plotting_Function:
                             
         #plt.figure()
         #plt.imshow(Image.T, origin='lower')
-        #plt.title('White Image')p,q
+        #plt.title('White Image')
         
         #plt.figure()
         #plt.imshow(-2.5*np.log10(Image.T) - 48.6, origin='lower')

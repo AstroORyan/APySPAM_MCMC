@@ -156,7 +156,7 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
     # As long as priors are satisfied, run the APySPAM simulation.
     #print('Simulation started at: ', datetime.datetime.now())
     candidate_sim_image = Run.main(theta,Conversion,Resolution,filters,[Input_Image.shape[0],Input_Image.shape[1]],Spectral_Density_1,Spectral_Density_2)
-    candidate_sim_image = np.flip(np.rot90(candidate_sim_image,1),axis=1)
+    #candidate_sim_image = np.flip(candidate_sim_image,axis=1)
     #print('Simulation finished at: ', datetime.datetime.now())
     # candidate_sim_image = ndimage.gaussian_filter(candidate_sim_image,sigma=0.5,mode='nearest')
     
@@ -193,12 +193,12 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
 #    plt.imshow(-2.5*np.log10(Input_Image) - 48.6)
 #    plt.title('Input')
 #    plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Input.png')
-#    if ln_like >= -10:
-    output_name = str(uuid.uuid4())
-    plt.figure()
-    plt.imshow(-2.5*np.log10(candidate_sim_image) - 48.6)
-    plt.title(['Sim. Ln_like = ', str(ln_like)])
-    plt.savefig(f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/{output_name}.png')
+    if ln_like >= -5:
+        output_name = str(uuid.uuid4())
+        plt.figure()
+        plt.imshow(-2.5*np.log10(candidate_sim_image) - 48.6)
+        plt.title(['Sim. Ln_like = ', str(ln_like)])
+        plt.savefig(f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/{output_name}.png')
     
 #    plt.figure()
 #    plt.imshow(Input_Binary)

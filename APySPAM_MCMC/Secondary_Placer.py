@@ -11,6 +11,7 @@ narrow prior for the secondary galaxy x and y positions.
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 def Distance_Calc(z):
       Omega_Matter = 0.308   #These values utilise a Reference Frame defined by the NASA ED
@@ -82,7 +83,7 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     # block_reduce = 6
     d = Distance_Calc(z)
     pixel_resolution = (0.396/(3600))*(np.pi/180)*block_reduce
-    Resolution = d*np.tan(pixel_resolution)
+    Resolution = 2*d*np.tan(pixel_resolution)
     
     # Then, define the 10x10 grid of ones
     if Input_Image.shape[0] == 50:
@@ -184,11 +185,11 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     plt.close()
     
     # Convert bin positions into Primaries Frame
-    Conversion = [Input_Image.shape[1]/2 - Position_Prim[1], Input_Image.shape[0]/2 - Position_Prim[0]]
+    Conversion = [Position_Prim[1] - Input_Image.shape[1]/2, Position_Prim[0] - Input_Image.shape[0]/2]
     
     # Convert into Galaxy Unit Distances and into the frame of the Primary 
-    Position[0] = ((Position_Sec[0] - Conversion[0]))*(Resolution/DU)
-    Position[1] = ((Position_Sec[1] - Conversion[1]))*(Resolution/DU)
+    Position[0] = ((Position_Sec[0] + Conversion[0]))*(Resolution/DU)
+    Position[1] = ((Position_Sec[1] + Conversion[1]))*(Resolution/DU)
     
     # Check Orientation:
 #    if Position_Sec[0] > Position_Prim[0]:
@@ -199,6 +200,6 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     # Prepare Stuff to export:
     x = Position[0]
     y = Position[1]
-        
+
     # Return
     return Conversion,[x,y], [x-0.5,x+0.5,y-0.5,y+0.5],Resolution
