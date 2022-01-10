@@ -193,12 +193,12 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
 #    plt.imshow(-2.5*np.log10(Input_Image) - 48.6)
 #    plt.title('Input')
 #    plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Input.png')
-    if ln_like >= -10:
-        output_name = str(uuid.uuid4())
-        plt.figure()
-        plt.imshow(-2.5*np.log10(candidate_sim_image) - 48.6)
-        plt.title(['Sim. Ln_like = ', str(ln_like)])
-        plt.savefig(f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/{output_name}.png')
+#    if ln_like >= -10:
+    output_name = str(uuid.uuid4())
+    plt.figure()
+    plt.imshow(-2.5*np.log10(candidate_sim_image) - 48.6)
+    plt.title(['Sim. Ln_like = ', str(ln_like)])
+    plt.savefig(f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/{output_name}.png')
     
 #    plt.figure()
 #    plt.imshow(Input_Binary)

@@ -9,7 +9,7 @@ import numpy as np
 # import sys
 
 class SED:
-    def getSED(folder,Spectral_Density_1,Spectral_Density_2,Ages,n1,n2,time,Weights,Part_Mass,SFR_Mass,h):
+    def getSED(Spectral_Density_1,Spectral_Density_2,Ages,n1,n2,time,Weights,Part_Mass,SFR_Mass,h):
         Initial_Flux_Dist = np.zeros([n1+n2,6900])
         Additional_Flux = np.zeros([n1+n2,6900])
         

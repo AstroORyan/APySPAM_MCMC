@@ -180,26 +180,25 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     plt.scatter(Position_Prim[0],Position_Prim[1])
     plt.scatter(Position_Sec[0],Position_Sec[1])
     plt.legend(['Primary','Secondary'])
-    plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC/Results/'+Name+'.png')
+    plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/'+Name+'.png')
     plt.close()
     
     # Convert bin positions into Primaries Frame
-    Conversion = [Position_Prim[0] - Input_Image.shape[1]/2, Position_Prim[1] - Input_Image.shape[0]/2]
+    Conversion = [Input_Image.shape[1]/2 - Position_Prim[1], Input_Image.shape[0]/2 - Position_Prim[0]]
     
     # Convert into Galaxy Unit Distances and into the frame of the Primary 
-    Position[0] = ((Position_Sec[0] + Conversion[1]))*(Resolution/DU)
-    Position[1] = ((Position_Sec[1] + Conversion[0]))*(Resolution/DU)
+    Position[0] = ((Position_Sec[0] - Conversion[0]))*(Resolution/DU)
+    Position[1] = ((Position_Sec[1] - Conversion[1]))*(Resolution/DU)
     
     # Check Orientation:
-    if Position_Sec[0] > Position_Prim[0]:
-        Position[0] = -Position[0]
-    if Position_Sec[1] > Position_Prim[1]:
-        Position[1] = -Position[1]
+#    if Position_Sec[0] > Position_Prim[0]:
+#        Position[0] = -Position[0]
+#    if Position_Sec[1] > Position_Prim[1]:
+#        Position[1] = -Position[1]
     
     # Prepare Stuff to export:
     x = Position[0]
     y = Position[1]
-    
         
     # Return
-    return Conversion,[x,y], [x-2,x+2,y-2,y+2],Resolution
+    return Conversion,[x,y], [x-0.5,x+0.5,y-0.5,y+0.5],Resolution
