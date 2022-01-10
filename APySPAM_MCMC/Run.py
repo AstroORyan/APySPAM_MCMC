@@ -159,7 +159,7 @@ class Run:
       self.takeAStep()
 
 
-  def main(theta,Conversion,Resolution,filters,dims,folder,Spectral_Density_1,Spectral_Density_2):
+  def main(theta,Conversion,Resolution,filters,dims,Spectral_Density_1,Spectral_Density_2):
       # folder = 'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\'
       # filters = colour.get_filters(folder)
           
@@ -192,7 +192,7 @@ class Run:
       SFRs, SF_Mass = SFR_Calculations.SFR(Gas_Masses,params.mass1,params.mass2,params.rout1,params.rout2,params.Seperation,params.h,time_interval/2,
                                   Weights,params.n1,params.n,params.Ages)
       
-      Spectral_Density = SED.getSED(folder,Spectral_Density_1,Spectral_Density_2,params.Ages,params.n1,params.n2,time_interval/2,Weights,[params.mass1,params.mass2],SF_Mass,params.h)
+      Spectral_Density = SED.getSED(Spectral_Density_1,Spectral_Density_2,params.Ages,params.n1,params.n2,time_interval/2,Weights,[params.mass1,params.mass2],SF_Mass,params.h)
     
       Population_Flux = colour.get_colour(Spectral_Density[0],Spectral_Density[1],filters,params.redshift)
       

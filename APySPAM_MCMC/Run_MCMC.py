@@ -154,7 +154,7 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
     
     # As long as priors are satisfied, run the APySPAM simulation.
     #print('Simulation started at: ', datetime.datetime.now())
-    candidate_sim_image = Run.main(theta,Conversion,Resolution,filters,[Input_Image.shape[0],Input_Image.shape[1]],r'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC_Full\\',Spectral_Density_1,Spectral_Density_2)
+    candidate_sim_image = Run.main(theta,Conversion,Resolution,filters,[Input_Image.shape[0],Input_Image.shape[1]],Spectral_Density_1,Spectral_Density_2)
     candidate_sim_image = np.flip(np.rot90(candidate_sim_image,1),axis=1)
     #print('Simulation finished at: ', datetime.datetime.now())
     # candidate_sim_image = ndimage.gaussian_filter(candidate_sim_image,sigma=0.5,mode='nearest')
