@@ -174,31 +174,32 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     # Adjust_y = Adjust_y[0] - Step_Size
     Position_Sec = [Position[1], Position[0]]  
     
+    # Convert bin positions into Primaries Frame
+    Conversion = [Position_Prim[0] - Input_Image.shape[1]/2, Position_Prim[1] - Input_Image.shape[0]/2]
+    
     # Check Positions are Correct
     plt.figure()
     plt.imshow(Input_Image)
     plt.scatter(Position_Prim[0],Position_Prim[1])
     plt.scatter(Position_Sec[0],Position_Sec[1])
-    plt.legend(['Primary','Secondary'])
-    plt.savefig(r'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\Results\\'+Name+'.png')
-    plt.close()
-    
-    # Convert bin positions into Primaries Frame
-    Conversion = [Position_Prim[0] - Input_Image.shape[1]/2, Position_Prim[1] - Input_Image.shape[0]/2]
+    plt.scatter(Input_Image.shape[0]/2 + Conversion[0], Input_Image.shape[1]/2 + Conversion[1])
+    plt.legend(['Primary','Secondary','Conversion'])
+    #plt.savefig(r'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\Results\\'+Name+'.png')
+    #plt.close()
     
     # Convert into Galaxy Unit Distances and into the frame of the Primary 
     Position[0] = ((Position_Sec[0] + Conversion[1]))*(Resolution/DU)
     Position[1] = ((Position_Sec[1] + Conversion[0]))*(Resolution/DU)
     
     # Check Orientation:
-    if Position_Sec[0] > Position_Prim[0]:
-        Position[0] = -Position[0]
-    if Position_Sec[1] > Position_Prim[1]:
-        Position[1] = -Position[1]
+#    if Position_Sec[0] > Position_Prim[0]:
+#        Position[0] = -Position[0]
+#    if Position_Sec[1] > Position_Prim[1]:
+#        Position[1] = -Position[1]
     
     # Prepare Stuff to export:
-    x = Position[0]
-    y = Position[1]
+    x = Position[1]
+    y = Position[0]
     
         
     # Return

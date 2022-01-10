@@ -227,14 +227,14 @@ def Binary_Creator(Image):
 def Run_MCMC():
     global Resolution, filters, Position, Conversion, Limits, block_reduce,Spectral_Density_1,Spectral_Density_2
     # Setup inputs and imports that can be done before iterating through MCMC
-    input_folder = r'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\Inputs\\'
+    input_folder = r'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Inputs\\'
     input_paths = glob.glob(input_folder+'*.*')
     n_inputs = len(input_paths)
     filters = Imports.Filters()
     redshifts = read_csv('C:\\Users\\oryan\\APySPAM_Inputs_All_Variables\\Redshifts.csv')
     
-    Spectral_Density_1 = np.loadtxt(r'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\Spectra\\Raw_Spectral_Data_Z_0.0001.txt')
-    Spectral_Density_2 = np.loadtxt(r'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\Spectra\\Raw_Spectral_Data_Z_0.004.txt')
+    Spectral_Density_1 = np.loadtxt(r'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Spectra\\Raw_Spectral_Data_Z_0.0001.txt')
+    Spectral_Density_2 = np.loadtxt(r'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Spectra\\Raw_Spectral_Data_Z_0.004.txt')
 
     
     # Setup MCMC run
@@ -246,7 +246,7 @@ def Run_MCMC():
     Labels = ['x','y','z','vx','vy','vz','M1','M2','R1','R2','phi1','phi2','theta1','theta2','Age1','Age2','Gas1','Gas2','Met1','Met2']
     
     # The MCMC Run
-    for p in range(n_inputs):
+    for p in range(0,n_inputs):
         Input_Image,z,block_reduce,Name = Observation_Import(input_paths[p], redshifts)
         Input_Binary = Binary_Creator(Input_Image)
         Conversion, Position, Limits, Resolution = Secondary_Placer(Input_Image, Input_Binary,z,block_reduce,Name)
