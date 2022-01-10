@@ -1,7 +1,7 @@
 #$ -S /bin/bash
 
 #$ -q parallel
-#$ -N Run_25_30
+#$ -N Run_intro
 #$ -l h_vmem=2G
 #$ -l np=16
 #$ -m e

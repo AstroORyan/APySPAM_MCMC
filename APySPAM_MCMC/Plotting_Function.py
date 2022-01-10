@@ -43,7 +43,7 @@ class Plotting_Function:
                 p = np.where(x[i] >= x_pixel_value)[0][-1]
                 q = np.where(y[i] >= y_pixel_value)[0][-1]
 
-                Image[p,q] += total_flux[i]
+                Image[q,p] += total_flux[i]
                             
         #plt.figure()
         #plt.imshow(Image.T, origin='lower')

@@ -180,7 +180,7 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     plt.scatter(Position_Prim[0],Position_Prim[1])
     plt.scatter(Position_Sec[0],Position_Sec[1])
     plt.legend(['Primary','Secondary'])
-    plt.savefig(r'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\Results\\'+Name+'.png')
+    plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC/Results/'+Name+'.png')
     plt.close()
     
     # Convert bin positions into Primaries Frame
