@@ -34,11 +34,11 @@ class Run:
     x0 = None
     xout = None
 
-  def initRun(self,theta):
+  def initRun(self,theta,z):
     su = SetupUtil()
 
     su.setHelpers(self.forceModel, self.integrator, self.params)
-    su.customCollision(theta)
+    su.customCollision(theta,z)
 
     # update the forceModel based upon passed in args
     self.forceModel = su.createForceModel(self.params.potential_type,True)
@@ -159,13 +159,13 @@ class Run:
       self.takeAStep()
 
 
-  def main(theta,Conversion,Resolution,filters,dims,Spectral_Density_1,Spectral_Density_2):
+  def main(theta,Conversion,Resolution,filters,dims,Spectral_Density_1,Spectral_Density_2,z):
       # folder = 'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\'
       # filters = colour.get_filters(folder)
           
       run = Run()
-      run.initRun(theta)
-      params = run.params;
+      run.initRun(theta,z)
+      params = run.params
       
       Gas_Masses, Weights = Gas_Dist.MN_Dist(params.rout1,params.rout2,params.n1,params.n,params.Gas_Mass,run.x0,params.Init_Coords)
     

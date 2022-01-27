@@ -52,9 +52,9 @@ class SetupUtil:
 
 
   #Loads in parameters for the collision. 
-  def customCollision(self,theta):
+  def customCollision(self,theta,z):
 
-    self.params.tIsSet = False
+    self.params.tIsSet = True
 
     self.params.phi1   = theta[10]
     self.params.theta1 = theta[12]
@@ -81,8 +81,8 @@ class SetupUtil:
     metal_2 = 0.004
 
     self.params.h = 0.05#Parameters.hbase
-    self.params.time = -10
-    self.params.tstart = -10
+    self.params.time = theta[14]
+    self.params.tstart = theta[14]
     self.params.tIsSet = False
     
     rx = theta[0]
@@ -102,9 +102,9 @@ class SetupUtil:
     self.params.Ages = [Age_1, Age_2]
     self.params.metallicity = [metal_1,metal_2]
     
-    self.params.redshift = 0.0273
+    self.params.redshift = z
 
-    self.params.n = 1500
+    self.params.n = 2000
     self.params.n1 = int(self.params.n*(self.params.mass1/(self.params.mass1 + self.params.mass2)))    # Number of particles in the primary and secondary galaxy.
     self.params.n2 = int(self.params.n*(self.params.mass2/(self.params.mass1 + self.params.mass2)))    # Note, these have been distributed based on galaxy mass.
     while (self.params.n1 + self.params.n2) < self.params.n:                  # A safety loop to make sure all particles are assigned a galaxy.

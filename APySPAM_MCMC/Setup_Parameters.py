@@ -24,11 +24,12 @@ class Setup_Parameters:
       vz = 0
       mass1 = 2.5#3.0823#1.6199594298899755#15#10#
       mass2 = 2.5#0.07388#3.2343629373210243#15#10#
-      rout1 = (Input_Image.shape[0]*Resolution/15)/2 #10#
-      rout2 = (Input_Image.shape[0]*Resolution/15)/2 #0.5569210#10
+      rout1 = 2#(Input_Image.shape[0]*Resolution/15)/2 #10#
+      rout2 = 2#(Input_Image.shape[0]*Resolution/15)/2 #0.5569210#10
       phi1 = 45 #90 #
       phi2 = 45 #90 #
       theta1 = 180# 90 #
       theta2 = 180#90 #
+      time = -5
       
-      return [x,y,z,vx,vy,vz,mass1, mass2, rout1, rout2, phi1, phi2, theta1, theta2]
+      return [x,y,z,vx,vy,vz,mass1, mass2, rout1, rout2, phi1, phi2, theta1, theta2, time]

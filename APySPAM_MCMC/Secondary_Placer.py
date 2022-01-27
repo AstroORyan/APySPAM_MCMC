@@ -11,6 +11,8 @@ narrow prior for the secondary galaxy x and y positions.
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from astropy.cosmology import FlatLambdaCDM
+import astropy.units as u
 import sys
 
 def Distance_Calc(z):
@@ -81,9 +83,9 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     # Testing Temp Lines
     DU = 15
     # block_reduce = 6
-    d = Distance_Calc(z)
-    pixel_resolution = (0.396/(3600))*(np.pi/180)*block_reduce
-    Resolution = 2*d*np.tan(pixel_resolution)
+    cosmo = FlatLambdaCDM(H0=67.8 * u.km / u.s / u.Mpc, Tcmb0=2.275 * u.K, Om0 = 0.308)
+    d = np.float64(cosmo.luminosity_distance(z)) * 1e3
+    Resolution = np.float64(cosmo.kpc_proper_per_arcmin(z)) * (0.396 / 60) * block_reduce
     
     # Then, define the 10x10 grid of ones
     if Input_Image.shape[0] == 50:
@@ -143,7 +145,7 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     # Adjust_x,Adjust_y = np.where(Cutout == maxi)
     # Adjust_x = Adjust_x[0] - Step_Size
     # Adjust_y = Adjust_y[0] - Step_Size
-    Position_Prim = [Position[1], Position[0]]
+    Position_Prim = [Position[0], Position[1]]
     
     # Now, must get the Secondary Disk Position
     # Chi_Squared[np.where(Chi_Squared == Prim_Min)] = 1e6
@@ -173,23 +175,29 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     # Adjust_x,Adjust_y = np.where(Cutout == maxi)
     # Adjust_x = Adjust_x[0] - Step_Size
     # Adjust_y = Adjust_y[0] - Step_Size
-    Position_Sec = [Position[1], Position[0]]  
+    Position_Sec = [Position[0], Position[1]]
+
+    # Convert bin positions into Primaries Frame
+    Conversion = [Position_Prim[0] - Input_Image.shape[0]/2, Position_Prim[1] - Input_Image.shape[1]/2]
     
     # Check Positions are Correct
     plt.figure()
     plt.imshow(Input_Image)
-    plt.scatter(Position_Prim[0],Position_Prim[1])
-    plt.scatter(Position_Sec[0],Position_Sec[1])
+    plt.scatter(Position_Prim[1],Position_Prim[0])
+    plt.scatter(Position_Sec[1],Position_Sec[0])
     plt.legend(['Primary','Secondary'])
-    plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/'+Name+'.png')
+    plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Test_Images/'+Name+'.png')
     plt.close()
-    
-    # Convert bin positions into Primaries Frame
-    Conversion = [Position_Prim[1] - Input_Image.shape[1]/2, Position_Prim[0] - Input_Image.shape[0]/2]
-    
+        
     # Convert into Galaxy Unit Distances and into the frame of the Primary 
-    Position[0] = ((Position_Sec[0] + Conversion[0]))*(Resolution/DU)
-    Position[1] = ((Position_Sec[1] + Conversion[1]))*(Resolution/DU)
+    Position[0] = ((Position_Sec[0] - Position_Prim[0]))*(Resolution/DU)
+    Position[1] = ((Position_Sec[1] - Position_Prim[1]))*(Resolution/DU)
+
+    print(f'Position_Prim = [{Position_Prim[0]*(Resolution/DU)} , {Position_Prim[1]*(Resolution/DU)}]')
+    print(f'Position_Sec = [{Position_Sec[0]*(Resolution/DU)} , {Position_Sec[1]*(Resolution/DU)}]')
+    print(f'Conversion = [{Conversion[0]*(Resolution/DU)}, {Conversion[1]*(Resolution/DU)}')
+    print(f'Converted_Prim = [{(Position_Prim[0] - Conversion[0])*(Resolution/DU)}, {(Position_Prim[1] - Conversion[1])*(Resolution/DU)}]')
+    print(f'Converted_Sec = [{Position[0]},{Position[1]}]')
     
     # Check Orientation:
 #    if Position_Sec[0] > Position_Prim[0]:
@@ -202,4 +210,4 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     y = Position[1]
 
     # Return
-    return Conversion,[x,y], [x-0.5,x+0.5,y-0.5,y+0.5],Resolution
+    return Conversion,[x,y], [x-0.1,x+0.1,y-0.1,y+0.1],Resolution

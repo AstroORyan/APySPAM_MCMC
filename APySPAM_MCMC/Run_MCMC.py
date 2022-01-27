@@ -12,7 +12,7 @@ import glob
 import numpy as np
 import emcee
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import datetime
 from scipy import ndimage
@@ -21,6 +21,7 @@ import uuid
 import os
 import time
 from multiprocessing import Pool
+import sys
 import corner
 
 # Required Scripts Import
@@ -32,9 +33,12 @@ from colour import colour
 
 class Main_Script:
     def MCMC(ndim, nwalkers, nsteps, burnin, start, Input_Image, Input_Binary, Sigma_Image, Gal_Name):
-        pool = Pool(processes=32)
-        p0 = [(start + np.concatenate([0.25*(-1+2*np.random.random(2)),20*(-1+2*np.random.random(1)),1.5*(-1+2*np.random.random(3)),2.4*(-1+2*np.random.random(2)),
-                                      ((Input_Image.shape[0]*Resolution/15)/2)*(-1+2*np.random.random(2)),45*(-1+2*np.random.random(2)),90*(-1+2*np.random.random(2))])) for i in range(nwalkers)]
+        pool = Pool(processes=64)
+        #if not pool.is_master():
+        #      pool.wait()
+        #      sys.exit(0)
+        p0 = [(start + np.concatenate([0.1*(-1+2*np.random.random(2)),2.5*(-1+2*np.random.random(1)),1.5*(-1+2*np.random.random(3)),2.4*(-1+2*np.random.random(2)),
+                                      1.5*(-1+2*np.random.random(2)),45*(-1+2*np.random.random(2)),90*(-1+2*np.random.random(2)), (-1+2*np.random.random(1))])) for i in range(nwalkers)]
         
         # p0 = [(start + np.concatenate([0.025*(-1+2*np.random.random(2)), 0.20*(-1+2*np.random.random(1)),0.25*(-1+2*np.random.random(3)),0.25*(-1+2*np.random.random(2)),
         #                                0.5*(-1+2*np.random.random(2)),10*(-1+2*np.random.random(4)),0.5*(-1+2*np.random.random(2)),0.01*(-1+2*np.random.random(2)),0.005*(-1+2*np.random.random(2))])) for i in range(nwalkers)]
@@ -43,6 +47,7 @@ class Main_Script:
         # Initiate the burn in phase utilising a Differential Evolution Move in the sampler.
         move = [(emcee.moves.WalkMove(), 0.5), (emcee.moves.StretchMove(), 0.5),]
         sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, threads=2,args=([Input_Image,Input_Binary,Sigma_Image]),moves=move,pool=pool)
+        #sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, threads=2,args=([Input_Image,Input_Binary,Sigma_Image]),moves=move)
         sampler.run_mcmc(p0,burnin,progress=True)
         burnin_final = sampler.get_chain()
         main_sequence_start = burnin_final[-1]
@@ -53,7 +58,7 @@ class Main_Script:
         
         # Now, we set off the main run:
         move = [(emcee.moves.WalkMove(), 0.5), (emcee.moves.StretchMove(), 0.5),]
-        sampler = emcee.EnsembleSampler(nwalkers,ndim,lnprob,args=([Input_Image,Input_Binary,Sigma_Image]),moves=move,pool=pool)
+        sampler = emcee.EnsembleSampler(nwalkers,ndim,lnprob,threads=2,args=([Input_Image,Input_Binary,Sigma_Image]),moves=move,pool=pool)
         print('Burn in completed... Beginning main emcee run for input ',Gal_Name,'.')
         sampler.run_mcmc(main_sequence_start, nsteps,progress=True)
         samples_final = sampler.get_chain(flat=True)
@@ -62,9 +67,9 @@ class Main_Script:
         np.save(filename,samples)
         print('Main run completed for input ',Gal_Name,'.')
         
-        pool.close()
         pool.terminate()
-        pool.join()
+        pool.close()
+        #pool.join()
         
         time.sleep(10)
         
@@ -74,7 +79,7 @@ class Main_Script:
         x,y = theta[0:2]
         z = theta[2]
         v = theta[3:6]
-        m1, m2, r1, r2, p1, p2, t1, t2 = theta[6:]
+        m1, m2, r1, r2, p1, p2, t1, t2, t = theta[6:]
         phis = np.asarray([p1,p2])
         thetas = np.asarray([t1,t2])
         if any(np.asarray([m1,m2,r1,r2]) < 0.0):    # Negative values for these parameters obviously break the code and are unphysical.
@@ -95,15 +100,18 @@ class Main_Script:
             Chi_Squared = -7e6
         elif m1 > 5 or m2 > 5 or m1 <= 0.1 or m2 <= 0.1:      # Note, this is an upper limit on mass of 5x10^12 Solar Masses.
             Chi_Squared = -np.inf
-        elif r1 > ((dims[0]*Resolution/15)) or r2 > ((dims[0]*Resolution/15)):  # Note, this is a cutoff of a Galactic radius of 600kpc
+        #elif r1 > ((dims[0]*Resolution/15)) or r2 > ((dims[0]*Resolution/15)):  # Note, this is a cutoff of a Galactic radius of 600kpc
+        elif r1 > 4 or r2 > 4:    
             Chi_Squared = -np.inf
         elif any(phis > 100) or any(phis < 0.0) or any(thetas < 90) or any(thetas > 270):
             Chi_Squared = -np.inf
-        elif int(1500*(m1/(m1 + m2))) == 0 or int(1500*(m2/(m1 + m2))) == 0:
+        elif int(2000*(m1/(m1 + m2))) == 0 or int(2000*(m2/(m1 + m2))) == 0:
             Chi_Squared = -np.inf         
-        elif m1/r1 > 10 or m2/r2 > 10:
+        elif m1/r1 > 5 or m2/r2 > 5: 	# This says, if I have a maximum mass of 5e11 SM, then my minimum radius is 15kpc.
             Chi_Squared = -np.inf
-        elif r1/m1 > 10 or r2/m2 > 10:
+        elif m1/r1 < 0.5 or m2/r2 < 0.5:  # This says, if I have a minimum mass of 1e10, the maximum radius it can have is 5kpc.
+            Chi_Squared = -np.inf
+        elif t > -4 or t < -6:
             Chi_Squared = -np.inf
         else: 
             Chi_Squared = 0
@@ -155,7 +163,7 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
     
     # As long as priors are satisfied, run the APySPAM simulation.
     #print('Simulation started at: ', datetime.datetime.now())
-    candidate_sim_image = Run.main(theta,Conversion,Resolution,filters,[Input_Image.shape[0],Input_Image.shape[1]],Spectral_Density_1,Spectral_Density_2)
+    candidate_sim_image = Run.main(theta,Conversion,Resolution,filters,[Input_Image.shape[0],Input_Image.shape[1]],Spectral_Density_1,Spectral_Density_2,z)
     #candidate_sim_image = np.flip(candidate_sim_image,axis=1)
     #print('Simulation finished at: ', datetime.datetime.now())
     # candidate_sim_image = ndimage.gaussian_filter(candidate_sim_image,sigma=0.5,mode='nearest')
@@ -176,7 +184,11 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
     Chi_Squared_Binary = abs((1/N)*Sigma_Binary)
     
     # Now, use our likelihood function to see the probability that these parameters (and simualted image) represent the observed data.
-    ln_like = -0.5*(Chi_Squared + Chi_Squared_Binary)
+    ln_like = -0.5*(Chi_Squared) #+ Chi_Squared_Binary)
+
+    #print(f'The found base likelihood = {-0.5*Chi_Squared}')
+    #print(f'The found additional likelihood = {-0.5*Chi_Squared_Binary}')
+    #sys.exit()
     
     #Testing Stuff
     #print('Chi_Squared = '+ str(Chi_Squared))
@@ -193,12 +205,12 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
 #    plt.imshow(-2.5*np.log10(Input_Image) - 48.6)
 #    plt.title('Input')
 #    plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Input.png')
-    if ln_like >= -5:
+    if ln_like >= -2.25:
         output_name = str(uuid.uuid4())
         plt.figure()
         plt.imshow(-2.5*np.log10(candidate_sim_image) - 48.6)
         plt.title(['Sim. Ln_like = ', str(ln_like)])
-        plt.savefig(f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/{output_name}.png')
+        plt.savefig(f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Test_Images/{output_name}.png')
     
 #    plt.figure()
 #    plt.imshow(Input_Binary)
@@ -247,29 +259,33 @@ def Binary_Creator(Image):
     return Input_Image_Binary
 
 def Run_MCMC():
-    global Resolution, filters, Position, Conversion, Limits, vlim,block_reduce, Spectral_Density_1, Spectral_Density_2
+    global Resolution, filters, Position, Conversion, Limits, vlim,block_reduce, Spectral_Density_1, Spectral_Density_2,z
     # Setup inputs and imports that can be done before iterating through MCMC
     input_folder = r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Inputs/'
+    #input_folder = 'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Inputs\\'
     input_paths = glob.glob(input_folder+'*.*')
     n_inputs = len(input_paths)
     filters = colour.get_filters(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/')
+    #filters = colour.get_filters('C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\')
     redshifts = read_csv('/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Redshifts/Redshifts.csv')
+    #redshifts = read_csv('C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Redshifts\\Redshifts.csv')
 
     
     # Setup MCMC run
-    ndim = 14
+    ndim = 15
     nwalkers = 80
-    nsteps = 2500
-    burnin = 1000
+    nsteps = 1000
+    burnin = 500
     
     Labels = ['x','y','z','vx','vy','vz','M1','M2','R1','R2','phi1','phi2','theta1','theta2']
 
     Spectral_Density_1 = np.loadtxt(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Spectra/Raw_Spectral_Data_Z_0.0001.txt')
     Spectral_Density_2 = np.loadtxt(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Spectra/Raw_Spectral_Data_Z_0.004.txt')
-
+    #Spectral_Density_1 = np.loadtxt(r'C:\Users\oryan\Documents\PySPAM_Original_Python_MCMC\APySPAM_MCMC\Spectra\Raw_Spectral_Data_Z_0.0001.txt')
+    #Spectral_Density_2 = np.loadtxt(r'C:\Users\oryan\Documents\PySPAM_Original_Python_MCMC\APySPAM_MCMC\Spectra\Raw_Spectral_Data_Z_0.004.txt')
     
     # The MCMC Run
-    for p in range(0,3):
+    for p in range(0,n_inputs):
         print('Beginning run for ', input_paths[p])
         Input_Image,z,block_reduce,Name = Observation_Import(input_paths[p], redshifts)
         Input_Binary = Binary_Creator(Input_Image)
