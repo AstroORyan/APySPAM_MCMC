@@ -182,7 +182,7 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     
     # Check Positions are Correct
     plt.figure()
-    plt.imshow(Input_Image)
+    plt.imshow(-2.5*np.log10(Input_Image) - 48.6)
     plt.scatter(Position_Prim[1],Position_Prim[0])
     plt.scatter(Position_Sec[1],Position_Sec[0])
     plt.legend(['Primary','Secondary'])
@@ -198,6 +198,7 @@ def Secondary_Placer(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     print(f'Conversion = [{Conversion[0]*(Resolution/DU)}, {Conversion[1]*(Resolution/DU)}')
     print(f'Converted_Prim = [{(Position_Prim[0] - Conversion[0])*(Resolution/DU)}, {(Position_Prim[1] - Conversion[1])*(Resolution/DU)}]')
     print(f'Converted_Sec = [{Position[0]},{Position[1]}]')
+    print(f'Using Resolution = {Resolution} kpc')
     
     # Check Orientation:
 #    if Position_Sec[0] > Position_Prim[0]:

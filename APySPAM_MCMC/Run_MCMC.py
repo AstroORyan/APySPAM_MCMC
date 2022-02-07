@@ -12,7 +12,7 @@ import glob
 import numpy as np
 import emcee
 import matplotlib
-# matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import datetime
 from scipy import ndimage
@@ -163,14 +163,16 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
     
     # As long as priors are satisfied, run the APySPAM simulation.
     #print('Simulation started at: ', datetime.datetime.now())
-    candidate_sim_image = Run.main(theta,Conversion,Resolution,filters,[Input_Image.shape[0],Input_Image.shape[1]],Spectral_Density_1,Spectral_Density_2,z)
-    #candidate_sim_image = np.flip(candidate_sim_image,axis=1)
-    #print('Simulation finished at: ', datetime.datetime.now())
-    # candidate_sim_image = ndimage.gaussian_filter(candidate_sim_image,sigma=0.5,mode='nearest')
+    candidate_sim_image = Run.main(theta,Conversion,Resolution,filters,[Input_Image.shape[0],Input_Image.shape[1]],Spectral_Density_1,Spectral_Density_2,z,Input_Image.shape[1])
+
+    candidate_sim_image_int = np.zeros(candidate_sim_image.shape)
+    for i in range(1,candidate_sim_image.shape[0] - 1):
+        for j in range(1,candidate_sim_image.shape[1] - 1):
+            candidate_sim_image_int[i,j] = np.mean(candidate_sim_image[i-1:i+1,j-1:j+1])
     
     # Now have candidate simulation image. Want to compare to observation using a Chi Squared.
     N = Input_Image.shape[0]*Input_Image.shape[1]
-    Sigma_Array = (Input_Image - candidate_sim_image)**2/(2*(Sigma_Image)**2)
+    Sigma_Array = (Input_Image - candidate_sim_image_int)**2/(2*(Sigma_Image)**2)
     Chi_Squared = (1/N)*np.sum(Sigma_Array)
     
     temp_binary = candidate_sim_image.copy()
@@ -179,9 +181,9 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
     if np.sum(temp_binary) == 0.0:
         return -np.inf
     
-    N = 50#len(Input_Binary[Input_Binary > 0])
-    Sigma_Binary = np.sum(Input_Binary) - np.sum(temp_binary)
-    Chi_Squared_Binary = abs((1/N)*Sigma_Binary)
+    #N = 50#len(Input_Binary[Input_Binary > 0])
+    #Sigma_Binary = np.sum(Input_Binary) - np.sum(temp_binary)
+    #Chi_Squared_Binary = abs((1/N)*Sigma_Binary)
     
     # Now, use our likelihood function to see the probability that these parameters (and simualted image) represent the observed data.
     ln_like = -0.5*(Chi_Squared) #+ Chi_Squared_Binary)
@@ -245,7 +247,7 @@ def Binary_Creator(Image):
     Input_Image_Mags = -2.5*np.log10(Image) - 48.6
     
     Input_Image_Mags[np.isnan(Input_Image_Mags)] = 30
-    cutoff = np.min(np.min(Input_Image_Mags)) + 3
+    cutoff = np.min(np.min(Input_Image_Mags)) + 5
     
     if cutoff >= 28.5:
         cutoff = 28.5
@@ -274,8 +276,8 @@ def Run_MCMC():
     # Setup MCMC run
     ndim = 15
     nwalkers = 80
-    nsteps = 1000
-    burnin = 500
+    nsteps = 2000
+    burnin = 1000
     
     Labels = ['x','y','z','vx','vy','vz','M1','M2','R1','R2','phi1','phi2','theta1','theta2']
 

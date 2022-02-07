@@ -7,6 +7,7 @@ Created on Tue Aug 31 17:05:36 2021
 import numpy as np
 import sys
 import datetime
+import matplotlib.pyplot as plt
 
 from Parameters import Parameters
 from SetupUtil import SetupUtil
@@ -51,6 +52,9 @@ class Run:
     self.xout = np.zeros((n+1,6))
 
     su.createCollision()
+    
+    if self.params.no_int_flag == True:
+        return
 
     self.copyParticles(self.integrator.x,self.x0)
 
@@ -159,12 +163,15 @@ class Run:
       self.takeAStep()
 
 
-  def main(theta,Conversion,Resolution,filters,dims,Spectral_Density_1,Spectral_Density_2,z):
+  def main(theta,Conversion,Resolution,filters,dims,Spectral_Density_1,Spectral_Density_2,z,im_dim):
       # folder = 'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\'
       # filters = colour.get_filters(folder)
           
       run = Run()
       run.initRun(theta,z)
+      # If an interaction has not occurred, quickly return an image which will cause chi_squared to be massive.
+      if run.params.no_int_flag == True:
+          return np.ones([im_dim,im_dim])*np.inf
       params = run.params
       
       Gas_Masses, Weights = Gas_Dist.MN_Dist(params.rout1,params.rout2,params.n1,params.n,params.Gas_Mass,run.x0,params.Init_Coords)
@@ -183,9 +190,18 @@ class Run:
       for i in range(1,int(nstep_local+1)):
         run.takeAStep()
         #if(i % 10 == 5):
+        #    SFRs, SF_Mass = SFR_Calculations.SFR(Gas_Masses,params.mass1,params.mass2,params.rout1,params.rout2,params.Seperation,params.h,time_interval/2,
+        #                          Weights,params.n1,params.n,params.Ages)
+        #    Spectral_Density = SED.getSED(Spectral_Density_1,Spectral_Density_2,params.Ages,params.n1,params.n2,time_interval/2,Weights,[params.mass1,params.mass2],SF_Mass,params.h)
+        #    Population_Flux = colour.get_colour(Spectral_Density[0],Spectral_Density[1],filters,params.redshift) 
+        #    white_image = Plotting_Function.plotting(run.x0,Population_Flux,SFRs,len(filters),Resolution,dims,Conversion)
+        #    plt.figure()
+        #    plt.imshow(-2.5*np.log10(white_image) - 48.6)
+        #    plt.savefig(f'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Intense_Testing\\{i}.png')
+        #    plt.close()
         #  run.params.iout = run.params.iout+1
         #  print(run.params.iout)
-          #IOUtil.outputParticles(run.getFilename(run.params.iout), run.integrator.x)
+             #IOUtil.outputParticles(run.getFilename(run.params.iout), run.integrator.x)
           
       # print('Sim complete. Computing fluxes. Standby...')
             
