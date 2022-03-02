@@ -1,10 +1,9 @@
 #$ -S /bin/bash
 
 #$ -q parallel
-#$ -N Run_Test_More
-#$ -l h_vmem=8G
+#$ -N Run_Test_Moves
+#$ -l h_vmem=3G
 #$ -l np=16
-#$ -l node_type=10Geth128G
 #$ -m e
 #$ -M d.oryan@lancaster.ac.uk
 

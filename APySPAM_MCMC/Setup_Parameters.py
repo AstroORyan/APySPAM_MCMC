@@ -19,8 +19,8 @@ class Setup_Parameters:
       x = Position[0]
       y = Position[1]
       z = 0
-      vx = 1.5
-      vy = 1.5
+      vx = 0
+      vy = 0
       vz = 0
       mass1 = 2.5#3.0823#1.6199594298899755#15#10#
       mass2 = 2.5#0.07388#3.2343629373210243#15#10#

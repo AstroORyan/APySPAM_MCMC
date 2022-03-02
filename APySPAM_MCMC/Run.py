@@ -171,7 +171,7 @@ class Run:
       run.initRun(theta,z)
       # If an interaction has not occurred, quickly return an image which will cause chi_squared to be massive.
       if run.params.no_int_flag == True:
-          return np.ones([im_dim,im_dim])*np.inf
+          return np.zeros([im_dim,im_dim])
       params = run.params
       
       Gas_Masses, Weights = Gas_Dist.MN_Dist(params.rout1,params.rout2,params.n1,params.n,params.Gas_Mass,run.x0,params.Init_Coords)

@@ -57,10 +57,10 @@ class SetupUtil:
     self.params.tIsSet = True
     self.params.no_int_flag = False
 
-    self.params.phi1   = theta[10] #97.78523 #
-    self.params.theta1 = theta[12] #144.6012 #
-    self.params.rout1   = theta[8] #0.94075 #
-    self.params.mass1   = theta[6] #1.3042 #
+    self.params.phi1   = theta[10] 
+    self.params.theta1 = theta[12] 
+    self.params.rout1   = theta[8] 
+    self.params.mass1   = theta[6] 
     self.params.rscale1 = [0.5*self.params.rout1/1.69,1.0,1.0]
     self.params.epsilon1 = 0.3
     self.params.eps1 = self.params.epsilon1*self.params.epsilon1
@@ -69,10 +69,10 @@ class SetupUtil:
     Age_1 = 10
     metal_1 = 0.0001
 
-    self.params.phi2   = theta[11] # 60.52239 #
-    self.params.theta2 = theta[13] # 216.5012 #
-    self.params.rout2   = theta[9] #0.54373 #
-    self.params.mass2   = theta[7] #1.25831 #
+    self.params.phi2   = theta[11]
+    self.params.theta2 = theta[13] 
+    self.params.rout2   = theta[9] 
+    self.params.mass2   = theta[7] 
     self.params.rscale2 = [0.5*self.params.rout2/1.69,1.0,1.0]
     self.params.epsilon2 = 0.3
     self.params.eps2 = self.params.epsilon2*self.params.epsilon2
@@ -81,16 +81,16 @@ class SetupUtil:
     Age_2 = 8
     metal_2 = 0.004
 
-    self.params.h = 0.05#Parameters.hbase
+    self.params.h = 0.05
     self.params.time = theta[14]
     self.params.tstart = theta[14]
     
-    rx = theta[0] # 2.1520 #-0.40793 #
-    ry = theta[1] #-0.5380 #-1.92518 #
-    rz = theta[2] #-1.95772 #
-    vx = theta[3] #0.754918 #
-    vy = theta[4] #-0.052439 #
-    vz = theta[5] #-0.77963 #
+    rx = theta[0] 
+    ry = theta[1] 
+    rz = theta[2] 
+    vx = theta[3] 
+    vy = theta[4] 
+    vz = theta[5] 
     
     self.params.sec_vec = [rx,ry,rz,vx,vy,vz]
     self.params.use_sec_vec = True
@@ -98,7 +98,8 @@ class SetupUtil:
     Gas_Fraction_1 = 0.15
     Gas_Fraction_2 = 0.15
     
-    self.params.Gas_Mass = [Gas_Fraction_1*self.params.mass1, Gas_Fraction_2*self.params.mass2]
+    Baryonic_Fraction = (1.0 + 0.3333)/7.13333
+    self.params.Gas_Mass = [Gas_Fraction_1*Baryonic_Fraction*self.params.mass1, Gas_Fraction_2*Baryonic_Fraction*self.params.mass2]
     self.params.Ages = [Age_1, Age_2]
     self.params.metallicity = [metal_1,metal_2]
     
