@@ -107,13 +107,7 @@ class SetupUtil:
 
     self.params.n = 2000
     self.params.n1 = int(self.params.n*(self.params.mass1/(self.params.mass1 + self.params.mass2)))    # Number of particles in the primary and secondary galaxy.
-    self.params.n2 = int(self.params.n*(self.params.mass2/(self.params.mass1 + self.params.mass2)))    # Note, these have been distributed based on galaxy mass.
-    while (self.params.n1 + self.params.n2) < self.params.n:                  # A safety loop to make sure all particles are assigned a galaxy.
-        random = np.random.random()
-        if random <= 0.5:
-            self.params.n1 += 1
-        elif random > 0.5:
-            self.params.n2 += 1
+    self.params.n2 = int(self.params.n - self.params.n1)
               
     self.params.eps1 = self.params.epsilon1*self.params.epsilon1
     self.params.eps2 = self.params.epsilon2*self.params.epsilon2

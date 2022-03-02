@@ -37,40 +37,38 @@ class Main_Script:
         p0 = [(start + np.concatenate([0.1*(-1+2*np.random.random(2)),2.5*(-1+2*np.random.random(1)),1.5*(-1+2*np.random.random(3)),2.4*(-1+2*np.random.random(2)),
                                       1.5*(-1+2*np.random.random(2)),170*(-1+2*np.random.random(2)),170*(-1+2*np.random.random(2)), (-1+2*np.random.random(1))])) for i in range(nwalkers)]
         
-        # p0 = [(start + np.concatenate([0.025*(-1+2*np.random.random(2)), 0.20*(-1+2*np.random.random(1)),0.25*(-1+2*np.random.random(3)),0.25*(-1+2*np.random.random(2)),
-        #                                0.5*(-1+2*np.random.random(2)),10*(-1+2*np.random.random(4)),0.5*(-1+2*np.random.random(2)),0.01*(-1+2*np.random.random(2)),0.005*(-1+2*np.random.random(2))])) for i in range(nwalkers)]
-        
         print('Beginning Burnin of Input ',Gal_Name,'.')
         # Initiate the burn in phase utilising a Differential Evolution Move in the sampler.
         move = [(emcee.moves.DEMove(), 0.8), (emcee.moves.DESnookerMove(), 0.2),]
         with Pool(processes=64) as pool:
             sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, threads=2,args=([Input_Image,Input_Binary,Sigma_Image]),moves=move,pool=pool)
-            
-        sampler.run_mcmc(p0,nsteps,progress=True)
+            sampler.run_mcmc(p0,nsteps,progress=True)
+
         run_save = sampler.chain()
         run_save_flat = sampler.chain[:,:,:].reshape((-1,ndim))
         try:
             filename = '/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Run_Samples_'+Gal_Name+'.npy'
+            np.save(filename,run_save)
         except:
             output_name = str(uuid.uuid4())
             filename = f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Run_Samples_{output_name}.npy'
             print(f'WARNING! Savename didn\'t work. Have saved current run as {output_name}')
+            np.save(filename,run_save)
             
         try:
             filename_flat = '/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Run_Flat_Samples_'+Gal_Name+'.npy'
+            np.save(filename_flat,run_save_flat)
         except:
             output_name = str(uuid.uuid4())
             filename = f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Run_Flat_Samples_{output_name}.npy'
             print(f'WARNING! Savename didn\'t work. Have saved current flat run as {output_name}')
-            
-        np.save(filename_flat,run_save_flat)
-        np.save(filename,run_save)
+            np.save(filename_flat,run_save_flat)
         
         print('Autocorrelation time of Main: {0:.2f} steps'.format(sampler.get_autocorr_time()[0]))
         
         time.sleep(10)
 
-        run_save_no_burnin = run_save[1000:,:,:]
+        run_save_no_burnin = run_save[int(0.1*nsteps):,:,:]
         run_save_no_burnin_flat = run_save_no_burnin.reshape((-1,ndim))
         
         return run_save_no_burnin_flat
@@ -100,7 +98,6 @@ class Main_Script:
             Chi_Squared = -7e6
         elif m1 > 5 or m2 > 5 or m1 <= 0.1 or m2 <= 0.1:      # Note, this is an upper limit on mass of 5x10^12 Solar Masses.
             Chi_Squared = -np.inf
-        #elif r1 > ((dims[0]*Resolution/15)) or r2 > ((dims[0]*Resolution/15)):  # Note, this is a cutoff of a Galactic radius of 600kpc
         elif r1 > 4 or r2 > 4:    
             Chi_Squared = -np.inf
         elif any(phis > 360) or any(phis < 0.0) or any(thetas < 0) or any(thetas > 360):
@@ -140,11 +137,6 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
     # As long as priors are satisfied, run the APySPAM simulation.
     #print('Simulation started at: ', datetime.datetime.now())
     candidate_sim_image = Run.main(theta,Conversion,Resolution,filters,[Input_Image.shape[0],Input_Image.shape[1]],Spectral_Density_1,Spectral_Density_2,z,Input_Image.shape[1])
-
-    #candidate_sim_image_int = np.zeros(candidate_sim_image.shape)
-    #for i in range(1,candidate_sim_image.shape[0] - 1):
-    #    for j in range(1,candidate_sim_image.shape[1] - 1):
-    #        candidate_sim_image_int[i,j] = np.mean(candidate_sim_image[i-1:i+1,j-1:j+1])
     
     # Now have candidate simulation image. Want to compare to observation using a Chi Squared.
     N = Input_Image.shape[0]*Input_Image.shape[1]
@@ -172,18 +164,13 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
 
 def Observation_Import(path,redshifts):
     Input_Image = np.load(path)
-    # Input_Image = np.load(r'C:\Users\oryan\Documents\Raw_Observational_Data\All_Gals_Reduced\Arp_256_Reduced_Observed_Data.npy')
-    # Input_Image /= 53.907456
-    # Input_Image = np.rot90(Input_Image,1)
     
     Galaxy_file = os.path.basename(path)
     Galaxy_Name = os.path.splitext(Galaxy_file)[0]
     
-    z_Column = redshifts[redshifts['Names'] == Galaxy_Name]['Redshift']
-    temp_z = np.asarray(z_Column)[0]
+    temp_z = redshifts.query('Names == @Galaxy_Name')['Redshift'].iloc[0]
     
-    block_reduce_column = redshifts[redshifts['Names'] == Galaxy_Name]['block_reduce']
-    Block_Reduce = np.asarray(block_reduce_column)[0]
+    Block_Reduce = redshifts.query('Names == @Galaxy_Name')['block_reduce'].iloc[0]
     
     return Input_Image, temp_z, Block_Reduce,Galaxy_Name
 
