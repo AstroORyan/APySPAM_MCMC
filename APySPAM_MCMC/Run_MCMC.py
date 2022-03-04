@@ -23,6 +23,7 @@ import time
 from multiprocessing import Pool
 import sys
 import corner
+from astropy.stats import sigma_clip
 
 # Required Scripts Import
 from Run import Run
@@ -172,7 +173,32 @@ def Observation_Import(path,redshifts):
     
     Block_Reduce = redshifts.query('Names == @Galaxy_Name')['block_reduce'].iloc[0]
     
-    return Input_Image, temp_z, Block_Reduce,Galaxy_Name
+    return Input_Image, temp_z, Block_Reduce,
+    
+def star_remove(im):
+    clipped_image = sigma_clip(im, sigma=10,maxiters=1,cenfunc='median')
+    mask = clipped_image.mask
+
+    stellar_pixels = np.where(mask)
+
+    for i in range(len(stellar_pixels[0])):
+        x = stellar_pixels[0][i]
+        y = stellar_pixels[1][i]
+
+        if x - 3 < 0:
+            x = x + 3
+        if x + 3 > im.shape[0]:
+            x = im.shape[0] - 3
+        if y + 3 < 0:
+            y = y + 3
+        if y + 3 > im.shape[1]:
+            y = im.shape[1] - 3
+
+    replacement = np.median(im[x-3:x+3,y-3:y+3])*np.random.random([6,6])
+
+    im[x-3:x+3,y-3:y+3] = replacement
+
+    return im
 
 def Binary_Creator(Image):
     Input_Image_Mags = -2.5*np.log10(Image) - 48.6
@@ -222,6 +248,7 @@ def Run_MCMC():
     for p in range(0,n_inputs):
         print('Beginning run for ', input_paths[p])
         Input_Image,z,block_reduce,Name = Observation_Import(input_paths[p], redshifts)
+        Input_Image = star_remove(Input_Image)
         Input_Binary = Binary_Creator(Input_Image)
         if centre_flag:
             Conversion,Position,Limits,Resolution = Secondary_Center(Input_Image, Input_Binary, z, block_reduce, Name)
