@@ -153,13 +153,6 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
 
     # Now, use our likelihood function to see the probability that these parameters (and simualted image) represent the observed data.
     ln_like = -0.5*(Chi_Squared/2 + active_chi_sq/2)
-
-    if ln_like >= -2.5:
-        output_name = str(uuid.uuid4())
-        plt.figure()
-        plt.imshow(-2.5*np.log10(candidate_sim_image) - 48.6)
-        plt.title(['Sim. Ln_like = ', str(ln_like)])
-        plt.savefig(f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Test_Images/{output_name}.png')
     
     return ln_like
 
@@ -221,13 +214,10 @@ def Run_MCMC():
     global Resolution, filters, Position, Conversion, Limits, vlim,block_reduce, Spectral_Density_1, Spectral_Density_2,z
     # Setup inputs and imports that can be done before iterating through MCMC
     input_folder = r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Inputs/'
-    #input_folder = 'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Inputs\\'
     input_paths = glob.glob(input_folder+'*.*')
     n_inputs = len(input_paths)
     filters = colour.get_filters(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/')
-    #filters = colour.get_filters('C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\')
     redshifts = read_csv('/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Redshifts/Redshifts.csv')
-    #redshifts = read_csv('C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Redshifts\\Redshifts.csv')
 
     
     # Setup MCMC run
@@ -241,8 +231,6 @@ def Run_MCMC():
 
     Spectral_Density_1 = np.loadtxt(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Spectra/Raw_Spectral_Data_Z_0.0001.txt')
     Spectral_Density_2 = np.loadtxt(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Spectra/Raw_Spectral_Data_Z_0.004.txt')
-    #Spectral_Density_1 = np.loadtxt(r'C:\Users\oryan\Documents\PySPAM_Original_Python_MCMC\APySPAM_MCMC\Spectra\Raw_Spectral_Data_Z_0.0001.txt')
-    #Spectral_Density_2 = np.loadtxt(r'C:\Users\oryan\Documents\PySPAM_Original_Python_MCMC\APySPAM_MCMC\Spectra\Raw_Spectral_Data_Z_0.004.txt')
     
     # The MCMC Run
     for p in range(0,n_inputs):
