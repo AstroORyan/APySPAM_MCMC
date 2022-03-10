@@ -146,12 +146,6 @@ def Secondary_Center(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     print(f'Converted_Sec = [{Position[0]},{Position[1]}]')
     print(f'Using Resolution = {Resolution} kpc')
     
-    # Check Orientation:
-#    if Position_Sec[0] > Position_Prim[0]:
-#        Position[0] = -Position[0]
-#    if Position_Sec[1] > Position_Prim[1]:
-#        Position[1] = -Position[1]
-    
     # Prepare Stuff to export:
     x = Position[0]
     y = Position[1]

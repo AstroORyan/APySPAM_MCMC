@@ -39,40 +39,48 @@ class Main_Script:
                                       1.5*(-1+2*np.random.random(2)),170*(-1+2*np.random.random(2)),170*(-1+2*np.random.random(2)), (-1+2*np.random.random(1))])) for i in range(nwalkers)]
         
         print('Beginning Burnin of Input ',Gal_Name,'.')
+
+        filename = Gal_Name + '.h5'
+        backend = emcee.backends.HDFBackend(filename)
+        backend.reset(nwalkers,ndim)
+
         # Initiate the burn in phase utilising a Differential Evolution Move in the sampler.
         move = [(emcee.moves.DEMove(), 0.8), (emcee.moves.DESnookerMove(), 0.2),]
-        with Pool(processes=64) as pool:
-            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, threads=2,args=([Input_Image,Input_Binary,Sigma_Image]),moves=move,pool=pool)
+        with Pool(processes=16) as pool:
+            if pool._processes != 16:
+                print(f'WARNING: Total number of processes is {pool._processes} and not 16. Aborting for safety.')
+                sys.exit()
+            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=([Input_Image,Input_Binary,Sigma_Image]),moves=move,pool=pool,backend=backend)
             sampler.run_mcmc(p0,nsteps,progress=True)
 
-        run_save = sampler.chain()
-        run_save_flat = sampler.chain[:,:,:].reshape((-1,ndim))
+        tau = sampler.get_autocorr_time()
+        burnin = int(2 * np.max(tau))
+        thin = int(0.5 * np.min(tau))
+
+        samples = sampler.get_chain(discard=burnin, flat=True, thin=thin)
+        log_prob_samples = sampler.get_log_prob(discard=burnin,flat=True,thin=thin)
+        log_prior_samples = sampler.get_blobs(discard=burnin,flat=True,thin=thin)
+
+        print("Burnin-in: {0}".format(burnin))
+        print("thin: {0}".format(thin))
+        print("Flat chain shape: {0}".format(samples.shape))
+        print("flat log prob shape: {0}".format(log_prob_samples.shape))
+        print("flat log prior shape: {0}".format(log_prior_samples.shape))
+
+        all_samples = np.concatenate((samples, log_prob_samples[:,None], log_prior_samples[:,None]), axis = 1)
+
         try:
             filename = '/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Run_Samples_'+Gal_Name+'.npy'
-            np.save(filename,run_save)
+            np.save(filename,all_samples)
         except:
             output_name = str(uuid.uuid4())
             filename = f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Run_Samples_{output_name}.npy'
             print(f'WARNING! Savename didn\'t work. Have saved current run as {output_name}')
-            np.save(filename,run_save)
-            
-        try:
-            filename_flat = '/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Run_Flat_Samples_'+Gal_Name+'.npy'
-            np.save(filename_flat,run_save_flat)
-        except:
-            output_name = str(uuid.uuid4())
-            filename = f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Run_Flat_Samples_{output_name}.npy'
-            print(f'WARNING! Savename didn\'t work. Have saved current flat run as {output_name}')
-            np.save(filename_flat,run_save_flat)
-        
-        print('Autocorrelation time of Main: {0:.2f} steps'.format(sampler.get_autocorr_time()[0]))
-        
+            np.save(filename,all_samples)
+                
         time.sleep(10)
-
-        run_save_no_burnin = run_save[int(0.1*nsteps):,:,:]
-        run_save_no_burnin_flat = run_save_no_burnin.reshape((-1,ndim))
         
-        return run_save_no_burnin_flat
+        return all_samples
         
     def Prior(theta,dims):
         x,y = theta[0:2]
@@ -152,21 +160,28 @@ def lnprob(theta,Input_Image,Input_Binary,Sigma_Image):
     active_chi_sq = (1/np.sum(mask))*np.sum((Input_Image[mask] - candidate_sim_image[mask])**2/(2*(Sigma_Image[mask])**2))
 
     # Now, use our likelihood function to see the probability that these parameters (and simualted image) represent the observed data.
-    ln_like = -0.5*(Chi_Squared/2 + active_chi_sq/2)
+    ln_like = -(Chi_Squared/2 + active_chi_sq/2) + 1
+
+    if ln_like >= -2.0:
+        output_name = str(uuid.uuid4())
+        plt.figure()
+        plt.imshow(-2.5*np.log10(candidate_sim_image) - 48.6)
+        plt.title(['Sim. Ln_like = ', str(ln_like)])
+        plt.savefig(f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Test_Images/{output_name}.png')
+        plt.close()
     
     return ln_like
 
 def Observation_Import(path,redshifts):
     Input_Image = np.load(path)
     
-    Galaxy_file = os.path.basename(path)
-    Galaxy_Name = os.path.splitext(Galaxy_file)[0]
+    Galaxy_Name = os.path.splitext(os.path.basename(path))[0]
     
     temp_z = redshifts.query('Names == @Galaxy_Name')['Redshift'].iloc[0]
     
     Block_Reduce = redshifts.query('Names == @Galaxy_Name')['block_reduce'].iloc[0]
     
-    return Input_Image, temp_z, Block_Reduce,
+    return Input_Image, temp_z, Block_Reduce, Galaxy_Name
     
 def star_remove(im):
     clipped_image = sigma_clip(im, sigma=10,maxiters=1,cenfunc='median')
@@ -223,7 +238,7 @@ def Run_MCMC():
     # Setup MCMC run
     ndim = 15
     nwalkers = 100
-    nsteps = 8500
+    nsteps = 2500
     
     Labels = ['x','y','z','vx','vy','vz','M1','M2','R1','R2','phi1','phi2','theta1','theta2','t']
 
@@ -248,6 +263,7 @@ def Run_MCMC():
         filename = '/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Main_Corner_Plot_'+Name+'.png'
         fig = corner.corner(samples,labels=Labels,show_titles=True)
         fig.savefig(filename)
+        plt.close()
 
         del Input_Image, start, Input_Binary, Sigma_Image, samples
 
