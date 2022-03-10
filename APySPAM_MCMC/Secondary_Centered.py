@@ -134,7 +134,7 @@ def Secondary_Center(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     plt.scatter(int(Input_Image.shape[1]/2),int(Input_Image.shape[0]/2))
     plt.scatter(Position_Sec[1],Position_Sec[0])
     plt.legend(['Primary','Secondary'])
-    plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Test_Images/'+Name+'.png')
+    # plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Test_Images/'+Name+'.png')
     plt.close()
         
     # Convert into Galaxy Unit Distances and into the frame of the Primary 

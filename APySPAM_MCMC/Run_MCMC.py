@@ -41,8 +41,8 @@ class Main_Script:
         print('Beginning Burnin of Input ',Gal_Name,'.')
         # Initiate the burn in phase utilising a Differential Evolution Move in the sampler.
         move = [(emcee.moves.DEMove(), 0.8), (emcee.moves.DESnookerMove(), 0.2),]
-        with Pool(processes=64) as pool:
-            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, threads=2,args=([Input_Image,Input_Binary,Sigma_Image]),moves=move,pool=pool)
+        with Pool(processes=2) as pool:
+            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob,args=([Input_Image,Input_Binary,Sigma_Image]),moves=move,pool=pool)
             sampler.run_mcmc(p0,nsteps,progress=True)
 
         run_save = sampler.chain()
@@ -173,7 +173,7 @@ def Observation_Import(path,redshifts):
     
     Block_Reduce = redshifts.query('Names == @Galaxy_Name')['block_reduce'].iloc[0]
     
-    return Input_Image, temp_z, Block_Reduce,
+    return Input_Image, temp_z, Block_Reduce, Galaxy_Name
     
 def star_remove(im):
     clipped_image = sigma_clip(im, sigma=10,maxiters=1,cenfunc='median')
@@ -220,29 +220,29 @@ def Binary_Creator(Image):
 def Run_MCMC():
     global Resolution, filters, Position, Conversion, Limits, vlim,block_reduce, Spectral_Density_1, Spectral_Density_2,z
     # Setup inputs and imports that can be done before iterating through MCMC
-    input_folder = r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Inputs/'
-    #input_folder = 'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Inputs\\'
+    #input_folder = r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Inputs/'
+    input_folder = 'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Inputs\\'
     input_paths = glob.glob(input_folder+'*.*')
     n_inputs = len(input_paths)
-    filters = colour.get_filters(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/')
-    #filters = colour.get_filters('C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\')
-    redshifts = read_csv('/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Redshifts/Redshifts.csv')
-    #redshifts = read_csv('C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Redshifts\\Redshifts.csv')
+    #filters = colour.get_filters(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/')
+    filters = colour.get_filters('C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\')
+    #redshifts = read_csv('/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Redshifts/Redshifts.csv')
+    redshifts = read_csv('C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\APySPAM_MCMC\\Redshifts\\Redshifts.csv')
 
     
     # Setup MCMC run
     ndim = 15
     nwalkers = 100
-    nsteps = 8500
+    nsteps = 2500
     
     Labels = ['x','y','z','vx','vy','vz','M1','M2','R1','R2','phi1','phi2','theta1','theta2','t']
 
     centre_flag = True
 
-    Spectral_Density_1 = np.loadtxt(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Spectra/Raw_Spectral_Data_Z_0.0001.txt')
-    Spectral_Density_2 = np.loadtxt(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Spectra/Raw_Spectral_Data_Z_0.004.txt')
-    #Spectral_Density_1 = np.loadtxt(r'C:\Users\oryan\Documents\PySPAM_Original_Python_MCMC\APySPAM_MCMC\Spectra\Raw_Spectral_Data_Z_0.0001.txt')
-    #Spectral_Density_2 = np.loadtxt(r'C:\Users\oryan\Documents\PySPAM_Original_Python_MCMC\APySPAM_MCMC\Spectra\Raw_Spectral_Data_Z_0.004.txt')
+    #Spectral_Density_1 = np.loadtxt(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Spectra/Raw_Spectral_Data_Z_0.0001.txt')
+    #Spectral_Density_2 = np.loadtxt(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Spectra/Raw_Spectral_Data_Z_0.004.txt')
+    Spectral_Density_1 = np.loadtxt(r'C:\Users\oryan\Documents\PySPAM_Original_Python_MCMC\APySPAM_MCMC\Spectra\Raw_Spectral_Data_Z_0.0001.txt')
+    Spectral_Density_2 = np.loadtxt(r'C:\Users\oryan\Documents\PySPAM_Original_Python_MCMC\APySPAM_MCMC\Spectra\Raw_Spectral_Data_Z_0.004.txt')
     
     # The MCMC Run
     for p in range(0,n_inputs):
