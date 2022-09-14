@@ -52,15 +52,14 @@ class SetupUtil:
 
 
   #Loads in parameters for the collision. 
-  def customCollision(self,theta,z):
-
+  def customCollision(self,theta,proj,z):
     self.params.tIsSet = True
     self.params.no_int_flag = False
 
-    self.params.phi1   = theta[10] 
-    self.params.theta1 = theta[12] 
-    self.params.rout1   = theta[8] 
-    self.params.mass1   = theta[6] 
+    self.params.phi1   = theta[8] 
+    self.params.theta1 = theta[10] 
+    self.params.rout1   = theta[6] 
+    self.params.mass1   = theta[4] 
     self.params.rscale1 = [0.5*self.params.rout1/1.69,1.0,1.0]
     self.params.epsilon1 = 0.3
     self.params.eps1 = self.params.epsilon1*self.params.epsilon1
@@ -69,10 +68,10 @@ class SetupUtil:
     Age_1 = 10
     metal_1 = 0.0001
 
-    self.params.phi2   = theta[11]
-    self.params.theta2 = theta[13] 
-    self.params.rout2   = theta[9] 
-    self.params.mass2   = theta[7] 
+    self.params.phi2   = theta[9]
+    self.params.theta2 = theta[11] 
+    self.params.rout2   = theta[7] 
+    self.params.mass2   = theta[5] 
     self.params.rscale2 = [0.5*self.params.rout2/1.69,1.0,1.0]
     self.params.epsilon2 = 0.3
     self.params.eps2 = self.params.epsilon2*self.params.epsilon2
@@ -82,15 +81,18 @@ class SetupUtil:
     metal_2 = 0.004
 
     self.params.h = 0.05
-    self.params.time = theta[14]
-    self.params.tstart = theta[14]
+    self.params.time = theta[12]
+    self.params.tstart = theta[12]
     
-    rx = theta[0] 
-    ry = theta[1] 
-    rz = theta[2] 
-    vx = theta[3] 
-    vy = theta[4] 
-    vz = theta[5] 
+    rx = proj[0][0]
+    ry = proj[1][0] 
+    rz = theta[0] 
+    vx = theta[1] 
+    vy = theta[2] 
+    vz = theta[3]
+
+    print(rx)
+    print(ry)
     
     self.params.sec_vec = [rx,ry,rz,vx,vy,vz]
     self.params.use_sec_vec = True
@@ -105,7 +107,7 @@ class SetupUtil:
     
     self.params.redshift = z
 
-    self.params.n = 2000
+    self.params.n = 1000
     self.params.n1 = int(self.params.n*(self.params.mass1/(self.params.mass1 + self.params.mass2)))    # Number of particles in the primary and secondary galaxy.
     self.params.n2 = int(self.params.n - self.params.n1)
               

@@ -35,11 +35,11 @@ class Run:
     x0 = None
     xout = None
 
-  def initRun(self,theta,z):
+  def initRun(self,theta,proj,z):
     su = SetupUtil()
 
     su.setHelpers(self.forceModel, self.integrator, self.params)
-    su.customCollision(theta,z)
+    su.customCollision(theta,proj,z)
 
     # update the forceModel based upon passed in args
     self.forceModel = su.createForceModel(self.params.potential_type,True)
@@ -53,8 +53,8 @@ class Run:
 
     su.createCollision()
     
-    if self.params.no_int_flag == True:
-        return
+    #if self.params.no_int_flag == True:
+    #    return
 
     self.copyParticles(self.integrator.x,self.x0)
 
@@ -163,15 +163,16 @@ class Run:
       self.takeAStep()
 
 
-  def main(theta,Conversion,Resolution,filters,dims,Spectral_Density_1,Spectral_Density_2,z,im_dim):
+  def main(theta,proj,Resolution,filters,dims,Spectral_Density_1,Spectral_Density_2,z):
       # folder = 'C:\\Users\\oryan\\Documents\\PySPAM_Original_Python_MCMC\\'
       # filters = colour.get_filters(folder)
+      Conversion = [0,0]  # Default is centered. So, no Convserion.
           
       run = Run()
-      run.initRun(theta,z)
+      run.initRun(theta,proj,z)
       # If an interaction has not occurred, quickly return an image which will cause chi_squared to be massive.
-      if run.params.no_int_flag == True:
-          return np.zeros([im_dim,im_dim])
+      #if run.params.no_int_flag == True:
+      #    return np.zeros([im_dim,im_dim])
       params = run.params
       
       Gas_Masses, Weights = Gas_Dist.MN_Dist(params.rout1,params.rout2,params.n1,params.n,params.Gas_Mass,run.x0,params.Init_Coords)
@@ -213,8 +214,8 @@ class Run:
       Population_Flux = colour.get_colour(Spectral_Density[0],Spectral_Density[1],filters,params.redshift)
       
       white_image = Plotting_Function.plotting(run.x0,Population_Flux,SFRs,len(filters),Resolution,dims,Conversion)
-      
-      return white_image
+
+      return white_image, run.params.no_int_flag
     
       # IOUtil.outputParticles(run.getFilename(run.params.iout),folder,run.integrator.x,Population_Flux,SFRs)
     

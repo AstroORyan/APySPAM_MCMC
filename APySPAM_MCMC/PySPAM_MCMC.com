@@ -1,8 +1,8 @@
 #$ -S /bin/bash
 
 #$ -q parallel
-#$ -N Run_Test_Moves
-#$ -l h_vmem=3G
+#$ -N Run_Systems_1_5
+#$ -l h_vmem=0.5G
 #$ -l np=16
 #$ -m e
 #$ -M d.oryan@lancaster.ac.uk

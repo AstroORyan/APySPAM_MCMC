@@ -32,31 +32,7 @@ def Prim_Remover(arr,shape,center):
           
     arr[limit_x_low:limit_x_up,limit_y_low:limit_y_up] = 1e6
     
-    return arr
-
-def Flux_Selector(input_image,position_x,position_y,step_size):
-    total_flux = np.zeros(len(position_x))
-    for i in range(len(position_x)):
-        limit_x_low = position_x[i] - step_size
-        limit_x_up = position_x[i] + step_size
-        limit_y_low = position_y[i] - step_size
-        limit_y_up = position_y[i] + step_size
-        
-        if limit_x_low < 0:
-            limit_x_low = 0
-        if limit_x_up > input_image.shape[0]:
-            limit_x_up = input_image.shape[0]
-        if limit_y_low < 0:
-            limit_y_low = 0
-        if limit_y_up > input_image.shape[1]:
-            limit_y_up = input_image.shape[1]
-            
-        total_flux[i] = np.sum(input_image[limit_y_low:limit_y_up,limit_x_low:limit_x_up])
-    
-    index = np.where(total_flux == np.max(total_flux))    
-    return position_x[index],position_y[index],index
-        
-
+    return arr      
 
 def Secondary_Center(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     # Testing Temp Lines
@@ -68,7 +44,7 @@ def Secondary_Center(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     
     # Then, define the 10x10 grid of ones
     if Input_Image.shape[0] == 50:
-        Filter_Size = 6
+        Filter_Size = 4
     elif Input_Image.shape[0] == 100:
         Filter_Size = 10
         
@@ -96,34 +72,30 @@ def Secondary_Center(Input_Image,Input_Image_Binary,z,block_reduce,Name):
         Filter_Position[0] += Filter_Size
         Filter_Position[1] = Step_Size
     
-    Chi_Squared[int(Chi_Squared.shape[0]/2),int(Chi_Squared.shape[1]/2)] = 1e6
+    Chi_Squared[int(Chi_Squared.shape[0]/2 - 1):int(Chi_Squared.shape[1]/2 + 1),int(Chi_Squared.shape[1]/2 - 1):int(Chi_Squared.shape[1]/2 + 1)] = 1e6
     Sec_Min = np.min(np.min(Chi_Squared))
-    
     Position_x,Position_y = np.where(Chi_Squared == Sec_Min)
-    Position_x_im,Position_y_im,index = Flux_Selector(Input_Image,Step_Size + Position_x*Filter_Size,Step_Size + Position_y*Filter_Size,Step_Size)    
-    Position_x_im = Position_x_im[0]
-    Position_y_im = Position_y_im[0]
-    Position = [Position_x_im,Position_y_im]  #[Step_Size + Position_x*Filter_Size,Step_Size + Position_y*Filter_Size]
+    Position = [Step_Size + Position_x[0]*Filter_Size,Step_Size + Position_y[0]*Filter_Size]
     
     # Create Secondaru Disk cutout
-    Limit_x = [Position[1] - Step_Size, Position[1] + Step_Size]
-    Limit_y = [Position[0] - Step_Size, Position[0] + Step_Size]
+    #Limit_x = [Position[1] - Step_Size, Position[1] + Step_Size]
+    #Limit_y = [Position[0] - Step_Size, Position[0] + Step_Size]
     
-    if Limit_x[0] < 0:
-        Limit_x[0] = 0
-    if Limit_x[1] > Input_Image_Binary.shape[0]:
-        Limit_x[1] = Input_Image_Binary.shape[0]        
-    if Limit_y[0] < 0:
-        Limit_y[0] = 0
-    if Limit_y[1] > Input_Image_Binary.shape[0]:
-        Limit_y[1] = Input_Image_Binary.shape[0]
+    #if Limit_x[0] < 0:
+    #    Limit_x[0] = 0
+    #if Limit_x[1] > Input_Image_Binary.shape[0]:
+    #    Limit_x[1] = Input_Image_Binary.shape[0]        
+    #if Limit_y[0] < 0:
+    #    Limit_y[0] = 0
+    #if Limit_y[1] > Input_Image_Binary.shape[0]:
+    #    Limit_y[1] = Input_Image_Binary.shape[0]
     
-    # Cutout = Input_Image[Limit_x[0]:Limit_x[1],Limit_y[0]:Limit_y[1]]
-    # maxi = np.max(np.max(Cutout))
-    # Adjust_x,Adjust_y = np.where(Cutout == maxi)
-    # Adjust_x = Adjust_x[0] - Step_Size
-    # Adjust_y = Adjust_y[0] - Step_Size
-    Position_Sec = [Position[0], Position[1]]
+    #Cutout = Input_Image[Limit_x[0]:Limit_x[1],Limit_y[0]:Limit_y[1]]
+    #maxi = np.max(np.max(Cutout))
+    #Adjust_x,Adjust_y = np.where(Cutout == maxi)
+    #Adjust_x = Adjust_x[0] - Step_Size
+    #Adjust_y = Adjust_y[0] - Step_Size
+    #Position_Sec = [Adjust_x, Adjust_y]
 
     # Convert bin positions into Primaries Frame
     Conversion = [0,0]
@@ -132,23 +104,26 @@ def Secondary_Center(Input_Image,Input_Image_Binary,z,block_reduce,Name):
     plt.figure()
     plt.imshow(-2.5*np.log10(Input_Image) - 48.6)
     plt.scatter(int(Input_Image.shape[1]/2),int(Input_Image.shape[0]/2))
-    plt.scatter(Position_Sec[1],Position_Sec[0])
-    plt.legend(['Primary','Secondary'])
+    plt.scatter(Position[1],Position[0])
+    plt.legend(['Primary', 'Secondary'])
     plt.savefig(r'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Test_Images/'+Name+'.png')
     plt.close()
+
+    print(f'Secondary centre found at pixel: [{Position[0]}, {Position[1]}]')
         
     # Convert into Galaxy Unit Distances and into the frame of the Primary 
-    Position[0] = (Position_Sec[0] - int(Input_Image.shape[0]/2))*(Resolution/DU)
-    Position[1] = (Position_Sec[1] - int(Input_Image.shape[1]/2))*(Resolution/DU)
+    Position[0] = (Position[0] - int(Input_Image.shape[0]/2))*(Resolution/DU)
+    Position[1] = (Position[1] - int(Input_Image.shape[1]/2))*(Resolution/DU)
 
-    print(f'Position_Sec = [{Position_Sec[0]*(Resolution/DU)} , {Position_Sec[1]*(Resolution/DU)}]')
-    print(f'Conversion = [{Conversion[0]*(Resolution/DU)}, {Conversion[1]*(Resolution/DU)}]')
-    print(f'Converted_Sec = [{Position[0]},{Position[1]}]')
+    print(f'Secondary centre found at position: [{Position[0]},{Position[1]}] in simulation units.')
+    print(f'Secondary centre is, therefore, estimated as: [{Position[0]*DU} , {Position[1]*DU}] away.')
     print(f'Using Resolution = {Resolution} kpc')
     
     # Prepare Stuff to export:
     x = Position[0]
     y = Position[1]
 
+    sys.exit()
+
     # Return
-    return Conversion,[x,y], [x-0.1,x+0.1,y-0.1,y+0.1],Resolution
+    return Conversion,[x,y], [-8,8,-8,8],Resolution

@@ -15,9 +15,9 @@ Outputs: None, but self is considered a global object of the class Run.py. There
 
 """
 class Setup_Parameters:
-  def Starting_Locations(Input_Image,Position,Resolution):      
-      x = Position[0]
-      y = Position[1]
+  def Starting_Locations():      
+      # x = Position[0]
+      # y = Position[1]
       z = 0
       vx = 0
       vy = 0
@@ -26,10 +26,10 @@ class Setup_Parameters:
       mass2 = 2.5#0.07388#3.2343629373210243#15#10#
       rout1 = 2#(Input_Image.shape[0]*Resolution/15)/2 #10#
       rout2 = 2#(Input_Image.shape[0]*Resolution/15)/2 #0.5569210#10
-      phi1 = 45 #90 #
-      phi2 = 45 #90 #
-      theta1 = 180# 90 #
-      theta2 = 180#90 #
+      phi1 = 90 #90 #
+      phi2 = 90 #90 #
+      theta1 = 90# 90 #
+      theta2 = 90#90 #
       time = -5
       
-      return [x,y,z,vx,vy,vz,mass1, mass2, rout1, rout2, phi1, phi2, theta1, theta2, time]
+      return [z,vx,vy,vz,mass1, mass2, rout1, rout2, phi1, phi2, theta1, theta2, time]

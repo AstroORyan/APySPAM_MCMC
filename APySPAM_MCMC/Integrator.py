@@ -59,6 +59,7 @@ class Integrator:
      
     # we unroll the second dimension of 6 elements to speed computation       
     np.copyto(self.x,x0)
+    #added#np.copyto(x0,self.x)
           
     self.force.diffeq(self.x,self.f)
 
@@ -78,6 +79,7 @@ class Integrator:
     self.force.diffeq(self.x,self.f)
 
     self.xe = self.xe + self.f * hod6
+    #added#np.copyto(self.xe,xout)
     np.copyto(xout,self.xe)
 
     # end rk4

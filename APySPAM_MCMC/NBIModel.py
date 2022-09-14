@@ -615,6 +615,9 @@ class NBIModel(ForceModel):
     v21 = vxp*vxp + vyp*vyp + vzp*vzp;
     v1  = math.sqrt(v21);
 
+    if v1 == 0.0:
+         print(f'theta = [{self.params.sec_vec},{self.params.mass1},{self.params.mass2},{self.params.rout1},{self.params.phi1},{self.params.phi2},{self.params.theta1},{self.params.theta2},{self.params.time}]')
+
     xvalue = v1 / df_sigma;
     c1 = NBIModel.erf(xvalue) - 2.0 * xvalue / NBIModel.sqrtpi * math.exp(-xvalue*xvalue);
 
