@@ -9,13 +9,15 @@ The Simulation-Based Inference version of APySPAM MCMC. This algorithm uses a co
 """
 # Imports
 import numpy as np
+from pandas import read_csv
 
 import os
+import glob
 import torch
 
 from sbi import utils as utils
 from sbi import analysis as analysis
-from sbi.inference import SNPE, prepare_for_sbi, simulate_for_sbi
+from sbi.inference import SNLE, likelihood_estimator_based_potential, MCMCPosterior, prepare_for_sbi
 
 import matplotlib
 matplotlib.use('Agg')
@@ -91,28 +93,45 @@ def Run_MCMC():
     global xy_pos, input_im, sigma_im, res, filters, spec_data_1, spec_data_2, z
 
     ## Old Stuff, get Simulation Parameters above like in the original PySPAM. Just need to call the right functions
+    cwd = os.getcwd() + '/PySPAM_Original_Python_MCMC'
+    input_folder = f'{cwd}/All_Inputs'
+    input_paths = glob.glob(input_folder + '*.*')
+
+    n_inputs = len(input_paths)
+    filters = colour.get_filters(cwd)
+    num_dim = 13
+
+    redshifts = read_csv(f'{cwd}/Redshifts/Redshifts.csv')
+
+    spec_data_1 = np.loadtxt(f'{cwd}/Spectra/Raw_Spectral_Data_Z_0.0001.txt')
+    spec_data_2 = np.loadtxt(f'{cwd}/Spectra/Raw_Spectral_Data_Z_0.004.txt')
+
+    for i in input_paths:
+        input_im, name = Observation_Import(i)
+        xy_pos, res, z, skip_flag = Secondary_Placer.get_secondary_coords(name, redshifts)
+        if not skip_flag:
+            break
+    
+    sigma_im = Sigma_Calc(input_im)
 
     ## New Stuff, Setting up Simulations
     priors = get_priors()
 
-    simulator, prior = prepare_for_sbi(simulator, prior)
+    simulator, prior = prepare_for_sbi(simulator, priors)
 
-    inference = SNPE(prior = prior)
+    theta = prior.sample((12500,))
+    x = theta + torch.randn((12500, num_dim))
+    x_o = input_im.copy()
 
-    theta, x = simulate_for_sbi(simulator, proposal = prior, num_simulations = 1000)
+    inference = SNLE(show_progress_bars = True)
+    likelihood_estimator = inference.append_simulations(theta, x).train()
 
-    inference = inference.append_simulations(theta, x)
+    potential_fn, parameter_transform = likelihood_estimator_based_potential(
+        likelihood_estimator, prior, x_o
+    )
 
-    density_estimator = inference.train()
-
-    posterior = inference.build_posterior(density_estimator)
-
-    posterior_samples = posterior.sample((10000,), x = input_im)
-
-    _ = analysis.pairplot(
-        posterior_samples, 
-        limits = [[-20,20], [-20,20], [-20,20], [-20,20], [0.01,10], [0.01,10],[0.01,4],[0.01,4],[0,360],[0,360],[0,360],[0,360],[-7,-3]],
-        figsize = (10,10)
+    posterior = MCMCPosterior(
+        potential_fn, proposal=prior, theta_transform=parameter_transform
     )
 
     plt.gca()
