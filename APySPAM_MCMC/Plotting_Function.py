@@ -45,9 +45,6 @@ class Plotting_Function:
                 q = np.where(y[i] > y_pixel_value)[0][-1]
 
                 Image[q,p] += total_flux[i]
-                    
-        Image_flip_0 = np.flip(Image, 0)
-        Image_flip_1 = np.flip(Image,1)
         
         # output_name = str(uuid.uuid4())        
         # plt.figure()
@@ -61,4 +58,4 @@ class Plotting_Function:
         # plt.title('Flipped Image')
         # plt.savefig(f'C:/Users/oryan/Documents/PySPAM_Original_Python_MCMC/APySPAM_MCMC/test-image/{output_name}-flip.jpeg', dpi=100, bbox_layout='tight')
 
-        return Image, Image_flip_0, Image_flip_1
+        return Image

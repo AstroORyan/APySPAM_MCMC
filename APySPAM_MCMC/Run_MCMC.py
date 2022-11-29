@@ -31,9 +31,10 @@ from Import_Procedure import Imports
 from Setup_Parameters import Setup_Parameters
 from Secondary_Placer import Secondary_Placer
 from colour import colour
+from ShapelyUtils import ShapelyUtils
 
 class Main_Script:
-    def MCMC(ndim, nwalkers, nsteps, start, Input_Image, Sigma_Image, Gal_Name):
+    def MCMC(ndim, nwalkers, nsteps, start, Input_Image, polygons, Sigma_Image, Gal_Name):
         
         cwd = os.getcwd() + '/PySPAM_Original_Python_MCMC'
         
@@ -50,7 +51,7 @@ class Main_Script:
         move = [(emcee.moves.DEMove(), 0.8), (emcee.moves.DESnookerMove(), 0.2),]
         print('Made it to setting up the Pool!')
         with Pool(processes=16) as pool:
-            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=([Input_Image,Sigma_Image]),moves=move,pool=pool,backend=backend)
+            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=([Input_Image,Sigma_Image, polygons]),moves=move,pool=pool,backend=backend)
             sampler.run_mcmc(p0,nsteps,progress=True)
             pool.close()
             pool.join()
@@ -74,7 +75,7 @@ class Main_Script:
         all_samples = np.concatenate((samples, log_prob_samples[:,None]), axis = 1)
 
         try:
-            filename = '{cwd}/Results/Run_Samples_'+Gal_Name+'.npy'
+            filename = f'{cwd}/Results/Run_Samples_{Gal_Name}.npy'
             np.save(filename,all_samples)
         except:
             output_name = str(uuid.uuid4())
@@ -95,23 +96,21 @@ class Main_Script:
             Chi_Squared = -np.inf
         # elif (x < Limits[0]) or (x > Limits[1]) or (y < Limits[2]) or (y > Limits[3]):
         #     Chi_Squared = -np.inf
-        elif z < -10 or z > 10:
+        elif z < -100 or z > 100:
             Chi_Squared = -np.inf
-        elif v[0] < -10 or v[0] > 10:
+        elif v[0] < -100 or v[0] > 100:
             Chi_Squared = -np.inf
-        elif v[1] < -10 or v[1] > 10:
+        elif v[1] < -100 or v[1] > 100:
             Chi_Squared = -np.inf
-        elif v[2] > 10 or v[2] < -10:
+        elif v[2] > 100 or v[2] < -100:
             Chi_Squared = -np.inf
         elif np.linalg.norm(v) == 0.0:
             Chi_Squared = -7e6
-        # elif np.linalg.norm([x,y,z]) == 0.0:
-        #     Chi_Squared = -7e6
         elif m1 > 10 or m2 > 10 or m1 <= 0.01 or m2 <= 0.01:      # Note, this is an upper limit on mass of 5x10^12 Solar Masses.
             Chi_Squared = -np.inf
-        elif r1 > 4 or r2 > 4 or r1 <= 0.01 or r2 <= 0.01:    
+        elif r1 > 5 or r2 > 5 or r1 <= 0.01 or r2 <= 0.01:    
             Chi_Squared = -np.inf            
-        elif any(phis > 180) or any(phis < 0.0) or any(thetas < 0.0) or any(thetas > 180):
+        elif any(phis > 360) or any(phis < 0.0) or any(thetas < 0.0) or any(thetas > 360):
             Chi_Squared = -np.inf
         elif int(1000*(m1/(m1 + m2))) == 0 or int(1000*(m2/(m1 + m2))) == 0:
             Chi_Squared = -np.inf         
@@ -156,7 +155,7 @@ def Sigma_Calc(Input_Image):
     return sigma_image_exp
 
     
-def lnprob(theta,Input_Image,Sigma_Image):
+def lnprob(theta,Input_Image,Sigma_Image,polygons):
     ln_prior, theta = Main_Script.Prior(theta,[Input_Image.shape[0],Input_Image.shape[1]])
     
     if ln_prior == -np.inf:
@@ -164,7 +163,7 @@ def lnprob(theta,Input_Image,Sigma_Image):
 
     # As long as priors are satisfied, run the APySPAM simulation.
     #print('Simulation started at: ', datetime.datetime.now())
-    sim_image, sim_image_flip_0, sim_image_flip_1, no_int_flag = Run.main(theta,xy_pos,Resolution,filters,[Input_Image.shape[0],Input_Image.shape[1]],Spectral_Density_1,Spectral_Density_2,z)
+    sim_image, no_int_flag = Run.main(theta,xy_pos,Resolution,filters,[Input_Image.shape[0],Input_Image.shape[1]],Spectral_Density_1,Spectral_Density_2,z)
     
     if no_int_flag:
         return -np.inf
@@ -173,24 +172,11 @@ def lnprob(theta,Input_Image,Sigma_Image):
     N = Input_Image.shape[0]*Input_Image.shape[1]
     Sigma_Array = (Input_Image - sim_image)**2/(2*(Sigma_Image**2))
     Chi_Squared = (1/N)*np.sum(Sigma_Array)
-    
-    Sigma_Array_flip_0 = (Input_Image - sim_image_flip_0)**2 / (2*Sigma_Image**2)
-    Chi_Sqr_flip_0 = (1/N)*np.sum(Sigma_Array_flip_0)
-    
-    Sigma_Array_flip_1 = (Input_Image - sim_image_flip_1)**2 / (2 * Sigma_Image**2)
-    Chi_Sqr_flip_1 = (1/N)*np.sum(Sigma_Array_flip_1)
-    
-    if Chi_Squared > Chi_Sqr_flip_0:
-        Chi_Squared = Chi_Sqr_flip_0
-    
-    if Chi_Squared > Chi_Sqr_flip_1:
-        Chi_Squared = Chi_Sqr_flip_1
-    
-    mask = sim_image > 0
+
+    sim_polygons, failed_flag = ShapelyUtils.get_galaxy_polygon(sim_image, theta[:2])
 
     # Now, use our likelihood function to see the probability that these parameters (and simualted image) represent the observed data.
     ln_like = -(Chi_Squared/2) + ln_prior + 1
-    
 
 ## Testing Lines
 #    if ln_like >= -2.0:
@@ -212,46 +198,6 @@ def Observation_Import(path):
     Galaxy_Name = os.path.splitext(os.path.basename(path))[0]
         
     return Input_Image, Galaxy_Name
-    
-def star_remove(im):
-    clipped_image = sigma_clip(im, sigma=10,maxiters=1,cenfunc='median')
-    mask = clipped_image.mask
-
-    stellar_pixels = np.where(mask)
-
-    for i in range(len(stellar_pixels[0])):
-        x = stellar_pixels[0][i]
-        y = stellar_pixels[1][i]
-
-        if x - 3 < 0:
-            x = x + 3
-        if x + 3 > im.shape[0]:
-            x = im.shape[0] - 3
-        if y + 3 < 0:
-            y = y + 3
-        if y + 3 > im.shape[1]:
-            y = im.shape[1] - 3
-
-        replacement = np.median(im[x-3:x+3,y-3:y+3])*np.random.random([6,6])
-
-        im[x-3:x+3,y-3:y+3] = replacement
-
-    return im
-
-def Binary_Creator(Image):
-    Input_Image_Mags = -2.5*np.log10(Image) - 48.6
-    
-    Input_Image_Mags[np.isnan(Input_Image_Mags)] = 30
-    
-    cutoff_max = 16
-    cutoff_min = 21
-    
-    Input_Image_Binary = Input_Image_Mags.copy()
-    Input_Image_Binary[Input_Image_Binary < cutoff_max] = 0
-    Input_Image_Binary[Input_Image_Binary > cutoff_min] = 0
-    Input_Image_Binary[Input_Image_Binary > 0] = 1
-
-    return Input_Image_Binary
 
 def Run_MCMC():
     global Resolution, filters, block_reduce, Spectral_Density_1, Spectral_Density_2,z,xy_pos
@@ -261,7 +207,6 @@ def Run_MCMC():
     
     input_folder = f'{cwd}/All_Inputs/'
     input_paths = glob.glob(input_folder+'*.*')
-    n_inputs = len(input_paths)
     filters = colour.get_filters(cwd)
     
     if len(filters) < 0.5:
@@ -269,12 +214,11 @@ def Run_MCMC():
         sys.exit()
     
     redshifts = read_csv(f'{cwd}/Redshifts/Redshifts.csv')
-
     
     # Setup MCMC run
     ndim = 13
-    nwalkers = 80
-    nsteps = 5000
+    nwalkers = 96
+    nsteps = 20000
 
     Spectral_Density_1 = np.loadtxt(f'{cwd}/Spectra/Raw_Spectral_Data_Z_0.0001.txt')
     Spectral_Density_2 = np.loadtxt(f'{cwd}/Spectra/Raw_Spectral_Data_Z_0.004.txt')
@@ -283,23 +227,21 @@ def Run_MCMC():
     for p in range(0,5):
         print('Beginning run for ', input_paths[p])
         Input_Image, Name = Observation_Import(input_paths[p])
-        #Input_Image = star_remove(Input_Image)
         Sigma_Image = Sigma_Calc(Input_Image)
-        Input_Binary = Binary_Creator(Input_Image)
         xy_pos, Resolution, z, skip_flag = Secondary_Placer.get_secondary_coords(Name, redshifts)
-        
         if skip_flag:
             continue
+        polygons = ShapelyUtils.get_galaxy_polygon(Input_Image, xy_pos)
 
         start = Setup_Parameters.Starting_Locations()
-        samples = Main_Script.MCMC(ndim, nwalkers, nsteps, start, Input_Image, Sigma_Image,Name)
-        filename = '/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Results/Main_Corner_Plot_'+Name+'.png'
+        samples = Main_Script.MCMC(ndim, nwalkers, nsteps, start, Input_Image, polygons, Sigma_Image,Name)
+        filename = '/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC/Results/Main_Corner_Plot_'+Name+'.png'
         Labels = ['z','vx','vy','vz','M1','M2','R1','R2','phi1','phi2','theta1','theta2','t']
         fig = corner.corner(samples,labels=Labels,show_titles=True)
         fig.savefig(filename)
         plt.close()
 
-        del Input_Image, start, Input_Binary, Sigma_Image, samples
+        del Input_Image, polygons, start, Sigma_Image, samples
 
     
 
