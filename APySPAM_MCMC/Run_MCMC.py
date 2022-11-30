@@ -34,7 +34,7 @@ from colour import colour
 from ShapelyUtils import ShapelyUtils
 
 class Main_Script:
-    def MCMC(ndim, nwalkers, nsteps, start, Input_Image, polygons, Sigma_Image, Gal_Name):
+    def MCMC(ndim, nwalkers, nsteps, start, Input_Image, Sigma_Image, Gal_Name):
         
         cwd = os.getcwd() + '/PySPAM_Original_Python_MCMC'
         
@@ -43,18 +43,21 @@ class Main_Script:
         
         print('Beginning Burnin of Input ',Gal_Name,'.')
 
-        filename = f'{cwd}/Results/' + Gal_Name + '_Full.h5'
-        backend = emcee.backends.HDFBackend(filename)
-        backend.reset(nwalkers,ndim)
+        # filename = f'{cwd}/Results/' + Gal_Name + '_Full.h5'
+        # backend = emcee.backends.HDFBackend(filename)
+        # backend.reset(nwalkers,ndim)
 
         # Initiate the burn in phase utilising a Differential Evolution Move in the sampler.
         move = [(emcee.moves.DEMove(), 0.8), (emcee.moves.DESnookerMove(), 0.2),]
         print('Made it to setting up the Pool!')
-        with Pool(processes=16) as pool:
-            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=([Input_Image,Sigma_Image, polygons]),moves=move,pool=pool,backend=backend)
-            sampler.run_mcmc(p0,nsteps,progress=True)
-            pool.close()
-            pool.join()
+        # with Pool(processes=16) as pool:
+        #     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=([Input_Image,Sigma_Image]),moves=move,pool=pool,backend=backend)
+        #     sampler.run_mcmc(p0,nsteps,progress=True)
+        #     pool.close()
+        #     pool.join()
+
+        sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=([Input_Image,Sigma_Image]),moves=move)
+        sampler.run_mcmc(p0,nsteps,progress=True)
 
         time.sleep(10)
 
@@ -155,7 +158,7 @@ def Sigma_Calc(Input_Image):
     return sigma_image_exp
 
     
-def lnprob(theta,Input_Image,Sigma_Image,polygons):
+def lnprob(theta,Input_Image,Sigma_Image):
     ln_prior, theta = Main_Script.Prior(theta,[Input_Image.shape[0],Input_Image.shape[1]])
     
     if ln_prior == -np.inf:
@@ -171,12 +174,38 @@ def lnprob(theta,Input_Image,Sigma_Image,polygons):
     # Now have candidate simulation image. Want to compare to observation using a Chi Squared.
     N = Input_Image.shape[0]*Input_Image.shape[1]
     Sigma_Array = (Input_Image - sim_image)**2/(2*(Sigma_Image**2))
-    Chi_Squared = (1/N)*np.sum(Sigma_Array)
+    Chi_Squared = (1/N)*np.sum(Sigma_Array) - 1
 
-    sim_polygons, failed_flag = ShapelyUtils.get_galaxy_polygon(sim_image, theta[:2])
+    sim_cutouts, sim_polygons, succeed_flag = ShapelyUtils.get_galaxy_polygon(sim_image, theta[:2])
+
+    if len(sim_cutouts) == 0 and len(sim_polygons) == 0 and not succeed_flag:
+        print('Failed. Trying new sim...')
+        return -np.inf
+
+    if succeed_flag:
+        prim_flux = ShapelyUtils.calculate_polygon_flux(cutouts[0], polygons[0])
+        sec_flux = ShapelyUtils.calculate_polygon_flux(cutouts[1], polygons[1])
+        sim_prim_flux = ShapelyUtils.calculate_polygon_flux(sim_cutouts[0], sim_polygons[0])
+        sim_sec_flux = ShapelyUtils.calculate_polygon_flux(sim_cutouts[1], sim_polygons[1])
+        jaccard_dist = ShapelyUtils.get_jaccard_dist(polygons, sim_polygons)
+
+        Chi_Squared_flux = (( prim_flux / sim_prim_flux ) * jaccard_dist[0]) + (( sec_flux / sim_sec_flux ) * jaccard_dist[1]) - 1
+        
+        ln_like = -((Chi_Squared/2) - (Chi_Squared_flux/2))/2 + ln_prior
+        print('Parameters : ', theta)
+        print('Log Likelihood: ', ln_like)
+        print('Chi Squared Flux: ', Chi_Squared_flux)
+        print('Chi Squared: ', Chi_Squared)
+    else:
+        ln_like = -(Chi_Squared/2) + ln_prior
+        print('Parameters : ', theta)
+        print('Log Likelihood: ', ln_like)
+        print('Chi Squared: ', Chi_Squared)
+
+
+    sys.exit()
 
     # Now, use our likelihood function to see the probability that these parameters (and simualted image) represent the observed data.
-    ln_like = -(Chi_Squared/2) + ln_prior + 1
 
 ## Testing Lines
 #    if ln_like >= -2.0:
@@ -192,18 +221,34 @@ def lnprob(theta,Input_Image,Sigma_Image,polygons):
     
     return ln_like
 
+def star_remove(im):
+    n = 99.9
+    cut = np.percentile(im, n)
+
+    mask = im.copy()
+    mask[mask > cut] = True
+    mask[mask <= cut] = False
+    mask = np.ma.make_mask(mask)
+
+    im[mask] = 0
+
+    return im
+
+
 def Observation_Import(path):
-    Input_Image = np.load(path)
+    input_im = np.load(path)
     
     Galaxy_Name = os.path.splitext(os.path.basename(path))[0]
         
+    Input_Image = star_remove(input_im)
+
     return Input_Image, Galaxy_Name
 
 def Run_MCMC():
-    global Resolution, filters, block_reduce, Spectral_Density_1, Spectral_Density_2,z,xy_pos
+    global Resolution, filters, cutouts, polygons, Spectral_Density_1, Spectral_Density_2,z,xy_pos
     # Setup inputs and imports that can be done before iterating through MCMC
     
-    cwd = os.getcwd() + '/PySPAM_Original_Python_MCMC' # To run locally, remove this addition.
+    cwd = os.getcwd() #+ '/PySPAM_Original_Python_MCMC' # To run locally, remove this addition.
     
     input_folder = f'{cwd}/All_Inputs/'
     input_paths = glob.glob(input_folder+'*.*')
@@ -231,10 +276,10 @@ def Run_MCMC():
         xy_pos, Resolution, z, skip_flag = Secondary_Placer.get_secondary_coords(Name, redshifts)
         if skip_flag:
             continue
-        polygons = ShapelyUtils.get_galaxy_polygon(Input_Image, xy_pos)
+        cutouts, polygons, _ = ShapelyUtils.get_galaxy_polygon(Input_Image, xy_pos)
 
         start = Setup_Parameters.Starting_Locations()
-        samples = Main_Script.MCMC(ndim, nwalkers, nsteps, start, Input_Image, polygons, Sigma_Image,Name)
+        samples = Main_Script.MCMC(ndim, nwalkers, nsteps, start, Input_Image, Sigma_Image,Name)
         filename = '/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC/Results/Main_Corner_Plot_'+Name+'.png'
         Labels = ['z','vx','vy','vz','M1','M2','R1','R2','phi1','phi2','theta1','theta2','t']
         fig = corner.corner(samples,labels=Labels,show_titles=True)

@@ -41,7 +41,7 @@ def checker(x, y, neg, t):
 class Secondary_Placer:
     
     def get_secondary_coords(gal_name, redshifts):
-        cwd = os.getcwd() + '/PySPAM_Original_Python_MCMC'
+        cwd = os.getcwd() #+ '/PySPAM_Original_Python_MCMC'
 
         file_path = cwd + '/data/all_coords.csv'
 
