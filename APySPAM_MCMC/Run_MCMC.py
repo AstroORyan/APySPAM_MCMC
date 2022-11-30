@@ -176,45 +176,36 @@ def lnprob(theta,Input_Image,Sigma_Image):
     Sigma_Array = (Input_Image - sim_image)**2/(2*(Sigma_Image**2))
     Chi_Squared = (1/N)*np.sum(Sigma_Array) - 1
 
-    sim_cutouts, sim_polygons, succeed_flag = ShapelyUtils.get_galaxy_polygon(sim_image, theta[:2])
+    sim_cutouts, sim_polygons, succeed_flag = ShapelyUtils.get_galaxy_polygon(sim_image, xy_pos, Resolution, False)
 
     if len(sim_cutouts) == 0 and len(sim_polygons) == 0 and not succeed_flag:
         print('Failed. Trying new sim...')
         return -np.inf
 
     if succeed_flag:
-        prim_flux = ShapelyUtils.calculate_polygon_flux(cutouts[0], polygons[0])
-        sec_flux = ShapelyUtils.calculate_polygon_flux(cutouts[1], polygons[1])
-        sim_prim_flux = ShapelyUtils.calculate_polygon_flux(sim_cutouts[0], sim_polygons[0])
-        sim_sec_flux = ShapelyUtils.calculate_polygon_flux(sim_cutouts[1], sim_polygons[1])
+        prim_flux = ShapelyUtils.calculate_polygon_flux(cutouts[0], polygons[0], 'obs')
+        sec_flux = ShapelyUtils.calculate_polygon_flux(cutouts[1], polygons[1], 'obs')
+        sim_prim_flux = ShapelyUtils.calculate_polygon_flux(sim_cutouts[0], sim_polygons[0], 'sim')
+        sim_sec_flux = ShapelyUtils.calculate_polygon_flux(sim_cutouts[1], sim_polygons[1], 'sim')
         jaccard_dist = ShapelyUtils.get_jaccard_dist(polygons, sim_polygons)
 
-        Chi_Squared_flux = (( prim_flux / sim_prim_flux ) * jaccard_dist[0]) + (( sec_flux / sim_sec_flux ) * jaccard_dist[1]) - 1
+        Chi_Squared_flux = (( prim_flux / sim_prim_flux ) * jaccard_dist[0]) + (( sec_flux / sim_sec_flux ) * jaccard_dist[1])
         
-        ln_like = -((Chi_Squared/2) - (Chi_Squared_flux/2))/2 + ln_prior
-        print('Parameters : ', theta)
-        print('Log Likelihood: ', ln_like)
-        print('Chi Squared Flux: ', Chi_Squared_flux)
-        print('Chi Squared: ', Chi_Squared)
+        ln_like = -((Chi_Squared) + (Chi_Squared_flux))/2 + ln_prior
     else:
         ln_like = -(Chi_Squared/2) + ln_prior
-        print('Parameters : ', theta)
-        print('Log Likelihood: ', ln_like)
-        print('Chi Squared: ', Chi_Squared)
-
-
-    sys.exit()
 
     # Now, use our likelihood function to see the probability that these parameters (and simualted image) represent the observed data.
 
 ## Testing Lines
 #    if ln_like >= -2.0:
-#        output_name = str(uuid.uuid4())
-#        plt.figure()
-#        plt.imshow(-2.5*np.log10(candidate_sim_image) - 48.6)
-#        plt.title(['Sim. Ln_like = ', str(ln_like)])
-#        plt.savefig(f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Test_Images/{output_name}.png')
-#        plt.close()
+    # output_name = str(uuid.uuid4())
+    # plt.figure()
+    # plt.imshow(-2.5*np.log10(sim_image) - 48.6)
+    # plt.title(['Sim. Ln_like = ', str(ln_like)])
+    # # plt.savefig(f'/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC_Full/Test_Images/{output_name}.png')
+    # plt.savefig(f'C:/Users/oryan/Documents/PYSPAM_Original_Python_MCMC/APySPAM_MCMC/test-image/{output_name}.jpg')
+    # plt.close()
 
     if np.isnan(ln_like):
         ln_like = -np.inf
@@ -243,6 +234,12 @@ def Observation_Import(path):
     Input_Image = star_remove(input_im)
 
     return Input_Image, Galaxy_Name
+
+def create_input_image(im):
+    plt.figure(figsize=(12,8))
+    plt.imshow(-2.5*np.log10(im) - 48.6)
+    plt.savefig(f'C:/Users/oryan/Documents/PYSPAM_Original_Python_MCMC/APySPAM_MCMC/test-image/Input_Image.jpg')
+    plt.close()
 
 def Run_MCMC():
     global Resolution, filters, cutouts, polygons, Spectral_Density_1, Spectral_Density_2,z,xy_pos
@@ -273,10 +270,11 @@ def Run_MCMC():
         print('Beginning run for ', input_paths[p])
         Input_Image, Name = Observation_Import(input_paths[p])
         Sigma_Image = Sigma_Calc(Input_Image)
+        # create_input_image(Input_Image)
         xy_pos, Resolution, z, skip_flag = Secondary_Placer.get_secondary_coords(Name, redshifts)
         if skip_flag:
             continue
-        cutouts, polygons, _ = ShapelyUtils.get_galaxy_polygon(Input_Image, xy_pos)
+        cutouts, polygons, _ = ShapelyUtils.get_galaxy_polygon(Input_Image, xy_pos, Resolution, True)
 
         start = Setup_Parameters.Starting_Locations()
         samples = Main_Script.MCMC(ndim, nwalkers, nsteps, start, Input_Image, Sigma_Image,Name)
