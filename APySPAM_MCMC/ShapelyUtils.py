@@ -11,7 +11,6 @@ from shapely.ops import unary_union
 import numpy as np
 import cv2 as cv
 
-import sys
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -42,12 +41,12 @@ class ShapelyUtils:
         if init_check:
             plt.figure(figsize = (12,8))
             plt.imshow(np.log10(prim_cutout))
-            plt.savefig('C:/Users/oryan/Documents/PYSPAM_Original_Python_MCMC/APySPAM_MCMC/test-image/prim-cutout.jpg')
+            plt.savefig('/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC/test-image/test-image/prim-cutout.jpg')
             plt.close()
 
             plt.figure(figsize = (12,8))
             plt.imshow(np.log10(sec_cutout))
-            plt.savefig('C:/Users/oryan/Documents/PYSPAM_Original_Python_MCMC/APySPAM_MCMC/test-image/sec-cutout.jpg')
+            plt.savefig('/mmfs1/home/users/oryan/PySPAM_Original_Python_MCMC/test-image/test-image/sec-cutout.jpg')
             plt.close()
 
         return [prim_cutout, sec_cutout], [prim_polygon, sec_polygon], flag

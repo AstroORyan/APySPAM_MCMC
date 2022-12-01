@@ -43,21 +43,21 @@ class Main_Script:
         
         print('Beginning Burnin of Input ',Gal_Name,'.')
 
-        # filename = f'{cwd}/Results/' + Gal_Name + '_Full.h5'
-        # backend = emcee.backends.HDFBackend(filename)
-        # backend.reset(nwalkers,ndim)
+        filename = f'{cwd}/Results/' + Gal_Name + '_Full.h5'
+        backend = emcee.backends.HDFBackend(filename)
+        backend.reset(nwalkers,ndim)
 
         # Initiate the burn in phase utilising a Differential Evolution Move in the sampler.
         move = [(emcee.moves.DEMove(), 0.8), (emcee.moves.DESnookerMove(), 0.2),]
         print('Made it to setting up the Pool!')
-        # with Pool(processes=16) as pool:
-        #     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=([Input_Image,Sigma_Image]),moves=move,pool=pool,backend=backend)
-        #     sampler.run_mcmc(p0,nsteps,progress=True)
-        #     pool.close()
-        #     pool.join()
+        with Pool(processes=16) as pool:
+            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=([Input_Image,Sigma_Image]),moves=move,pool=pool,backend=backend)
+            sampler.run_mcmc(p0,nsteps,progress=True)
+            pool.close()
+            pool.join()
 
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=([Input_Image,Sigma_Image]),moves=move)
-        sampler.run_mcmc(p0,nsteps,progress=True)
+        # sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=([Input_Image,Sigma_Image]),moves=move)
+        # sampler.run_mcmc(p0,nsteps,progress=True)
 
         time.sleep(10)
 
@@ -245,7 +245,7 @@ def Run_MCMC():
     global Resolution, filters, cutouts, polygons, Spectral_Density_1, Spectral_Density_2,z,xy_pos
     # Setup inputs and imports that can be done before iterating through MCMC
     
-    cwd = os.getcwd() #+ '/PySPAM_Original_Python_MCMC' # To run locally, remove this addition.
+    cwd = os.getcwd() + '/PySPAM_Original_Python_MCMC' # To run locally, remove this addition.
     
     input_folder = f'{cwd}/All_Inputs/'
     input_paths = glob.glob(input_folder+'*.*')
